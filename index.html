@@ -26,7 +26,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 /* pnm removed */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:8px;font-size:12px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer;border:1.5px solid;white-space:nowrap;transition:all .14s;}
 .bg2{border-color:#444;background:transparent;color:#ccc;}.bg2:hover{border-color:#aaa;color:#fff;}
-.bur{border-color:#475569;background:transparent;color:#94a3b8;font-size:14px;font-weight:700;padding:10px 16px;min-width:72px;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}.bur:active:not(.dim){background:transparent;color:#94a3b8;border-color:#475569;}@media(hover:hover){.bur:hover:not(.dim){border-color:#94a3b8;color:#e2e8f0;}}.bur:disabled{opacity:.28;cursor:default;}.bur.dim{opacity:.28;cursor:default;pointer-events:none;}.bp-group{display:flex;gap:6px;margin-left:auto;}
+.bur{border-color:#475569;background:transparent;color:#94a3b8;font-size:14px;font-weight:700;padding:10px 16px;min-width:72px;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;opacity:.28;cursor:default;pointer-events:none;}.bur.on{opacity:1;color:#1e293b;border-color:#475569;cursor:pointer;pointer-events:auto;font-weight:800;}@media(hover:hover){.bur.on:hover{background:rgba(148,163,184,.15);}}.bur:disabled{opacity:.28;cursor:default;}.bur.dim{opacity:.28;cursor:default;pointer-events:none;}.bp-group{display:flex;gap:6px;margin-left:auto;}
 .bb{border-color:var(--bar);background:var(--bar);color:#fff;}.bb:hover{background:var(--barh);}
 .bo{border-color:var(--bar);background:transparent;color:var(--bar);}.bo:hover{background:var(--al);}
 .bp{border-color:var(--am);background:var(--am);color:#fff;}.bp:hover{background:#92400e;}
@@ -380,7 +380,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 <!-- 차트 -->
 <div class="pg cp" id="pc">
   <div class="ca" id="ca">
-    <button class="btn bur dim" id="btnUndo" ontouchstart="" ontouchend="this.blur();doUndo()" onclick="doUndo()" title="실행 취소">↩ Undo</button><button class="btn bur dim" id="btnRedo" ontouchstart="" ontouchend="this.blur();doRedo()" onclick="doRedo()" title="다시 실행">↪ Redo</button>
+    <button class="btn bur" id="btnUndo" ontouchstart="" ontouchend="this.blur();doUndo()" onclick="doUndo()" title="실행 취소">↩ Undo</button><button class="btn bur" id="btnRedo" ontouchstart="" ontouchend="this.blur();doRedo()" onclick="doRedo()" title="다시 실행">↪ Redo</button>
     <div class="bp-group"><button class="btn bp" onclick="doPDF()">PDF 저장</button><button class="btn bp" style="background:#6b7280" onclick="doIMG()">이미지 저장</button></div>
     
   </div>
@@ -399,9 +399,9 @@ var _open=null,IS_RO=false,_ns=30;
 var RK='cs_recent';
 var _undoStack=[],_redoStack=[];
 function pushUndo(){_undoStack.push(JSON.stringify(S));if(_undoStack.length>30)_undoStack.shift();_redoStack=[];_updUR();}
-function doUndo(){if(IS_RO)return;if(!_undoStack.length)return;_redoStack.push(JSON.stringify(S));S=JSON.parse(_undoStack.pop());_open=null;calInit();sync();rEdit();rChips();rChart();_updUR();}
-function doRedo(){if(IS_RO)return;if(!_redoStack.length)return;_undoStack.push(JSON.stringify(S));S=JSON.parse(_redoStack.pop());_open=null;calInit();sync();rEdit();rChips();rChart();_updUR();}
-function _updUR(){requestAnimationFrame(function(){var u=document.getElementById('btnUndo');var r=document.getElementById('btnRedo');if(u){u.classList.toggle('dim',!_undoStack.length);u.blur();}if(r){r.classList.toggle('dim',!_redoStack.length);r.blur();}});}
+function doUndo(){if(IS_RO)return;if(!_undoStack.length)return;if(navigator.vibrate)navigator.vibrate(15);_redoStack.push(JSON.stringify(S));S=JSON.parse(_undoStack.pop());_open=null;calInit();sync();rEdit();rChips();rChart();_updUR();}
+function doRedo(){if(IS_RO)return;if(!_redoStack.length)return;if(navigator.vibrate)navigator.vibrate(15);_undoStack.push(JSON.stringify(S));S=JSON.parse(_redoStack.pop());_open=null;calInit();sync();rEdit();rChips();rChart();_updUR();}
+function _updUR(){var u=document.getElementById('btnUndo');var r=document.getElementById('btnRedo');if(u)u.classList.toggle('on',_undoStack.length>0);if(r)r.classList.toggle('on',_redoStack.length>0);}
 function _updLockOverlay(){
   var wrap=document.getElementById('edit-lockable');
   var ov=document.getElementById('lock-overlay');
@@ -1118,7 +1118,7 @@ function rSC(){
       +'</div>';
   });
   h+='</div>';el.innerHTML=h;
-  var gtW=document.getElementById('gt');if(gtW)el.style.width=gtW.offsetWidth+'px';
+  var cwW=document.querySelector('.cw');if(cwW)el.style.width=cwW.offsetWidth+'px';
 }
 
 /* DRAG 1차 */
@@ -1130,15 +1130,21 @@ function oMM(e){
   if(!drag)return;
   var dx=e.clientX-drag.sx,dd=Math.round(dx/CW),t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
   var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
-  /* 날짜는 절대값으로 자유롭게 이동 (S.sd 이전도 허용) */
+  var minD=S.sd,maxD=addD(S.sd,N-1);
   if(drag.m==='mv'){
-    t[sk]=addD(drag.osd,dd);t[ek]=addD(drag.oed,dd);
+    var dur=dif(drag.osd,drag.oed);
+    var ns=addD(drag.osd,dd),ne=addD(drag.oed,dd);
+    if(ns<minD){ns=minD;ne=addD(minD,dur);}
+    if(ne>maxD){ne=maxD;ns=addD(maxD,-dur);}
+    t[sk]=ns;t[ek]=ne;
   } else if(drag.m==='l'){
     var ls=addD(drag.osd,dd);
+    if(ls<minD)ls=minD;
     if(ls>drag.oed)ls=drag.oed;
     t[sk]=ls;
   } else {
     var re=addD(drag.oed,dd);
+    if(re>maxD)re=maxD;
     if(re<drag.osd)re=drag.osd;
     t[ek]=re;
   }
@@ -1189,7 +1195,10 @@ function nDragMoveT(e){
   e.preventDefault();
   var dx=e.touches[0].clientX-nDrag.sx,dd=Math.round(dx/CW);
   var n=S.notes.find(function(x){return x.id===nDrag.nid;});
-  if(!n)return;var newDt=addD(nDrag.odt,dd);n.dt=newDt;
+  if(!n)return;
+  var N=tot();var newDt=addD(nDrag.odt,dd);
+  if(newDt<S.sd)newDt=S.sd;if(newDt>addD(S.sd,N-1))newDt=addD(S.sd,N-1);
+  n.dt=newDt;
   var nl=(d2i(newDt)+0.5)*CW;
   document.querySelectorAll('.dg-note-line[data-nid="'+nDrag.nid+'"]').forEach(function(el){el.style.left=nl+'px';});
 }
@@ -1301,16 +1310,23 @@ function oTM(e){
   e.preventDefault();
   var touch=e.touches[0];
   var dx=touch.clientX-drag.sx,dd=Math.round(dx/CW);
-  var t=S.tasks.find(function(x){return x.id===drag.id;});
+  var t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
   var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
+  var minD=S.sd,maxD=addD(S.sd,N-1);
   if(drag.m==='mv'){
-    t[sk]=addD(drag.osd,dd);t[ek]=addD(drag.oed,dd);
+    var dur=dif(drag.osd,drag.oed);
+    var ns=addD(drag.osd,dd),ne=addD(drag.oed,dd);
+    if(ns<minD){ns=minD;ne=addD(minD,dur);}
+    if(ne>maxD){ne=maxD;ns=addD(maxD,-dur);}
+    t[sk]=ns;t[ek]=ne;
   } else if(drag.m==='l'){
     var ls=addD(drag.osd,dd);
+    if(ls<minD)ls=minD;
     if(ls>drag.oed)ls=drag.oed;
     t[sk]=ls;
   } else {
     var re=addD(drag.oed,dd);
+    if(re>maxD)re=maxD;
     if(re<drag.osd)re=drag.osd;
     t[ek]=re;
   }
