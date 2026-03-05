@@ -749,7 +749,7 @@ function rG(){
       var si2=d2i(t.sd2),ei2=Math.min(d2i(t.ed2),N-1);
       if(ei2>=si2&&si2<N){
         var lx2=si2*CW,wx2=(ei2-si2+1)*CW;
-        h+='<div class="bar" data-id2="'+t.id+'" style="left:'+lx2+'px;width:'+wx2+'px;position:absolute;top:70%;transform:translateY(-50%);z-index:2;background:'+barColor+';opacity:.8" onmousedown="dS2(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS2(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">[2차] '+esc(t.name)+(t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS2(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
+        h+='<div class="bar" data-id2="'+t.id+'" style="left:'+lx2+'px;width:'+wx2+'px;position:absolute;top:70%;transform:translateY(-50%);z-index:2;background:'+barColor+';opacity:.8" onmousedown="dS2(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS2(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">[2차] '+esc(t.name)+(t.desc2?' | '+esc(t.desc2):t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS2(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
       }
     }
     h+='</td></tr>';
