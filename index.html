@@ -641,6 +641,7 @@ function rEdit(){
       inner+='<div class="togr" style="margin-top:4px"><span style="font-size:12px">분할 시공</span><div class="tog'+(t.split?' on':'')+'" onclick="togSplit('+t.id+')"><div class="tk2"></div></div></div>';
       if(t.split){
         inner+='<div class="split-divider">2차</div>';
+        inner+='<div class="fr"><div class="ff"><label>공종명</label><input class="fi" type="text" value="'+esc(t.name)+'" oninput="upT('+t.id+',\'name\',this.value)"></div><div class="ff"><label>설명</label><input class="fi" type="text" value="'+esc(t.desc2||'')+'" placeholder="예) 조명 등" oninput="upT('+t.id+',\'desc2\',this.value)"></div></div>';
         inner+='<div class="date-btn-row"><div class="date-disp" onclick="openTCal('+t.id+',true)">'+(t.sd2?dsp(t.sd2):'📅 시작일')+'</div><span style="color:var(--mu);padding:0 2px">~</span><div class="date-disp" onclick="openTCal('+t.id+',true)">'+(t.ed2?dsp(t.ed2):'📅 종료일')+'</div></div>';
       }
     }
@@ -653,7 +654,7 @@ function rEdit(){
 }
 function togC(id){_open=(_open===id)?null:id;rEdit();}
 function togT(id){var t=S.tasks.find(function(x){return x.id===id;});if(t){t.on=!t.on;rEdit();}}
-function togSplit(id){var t=S.tasks.find(function(x){return x.id===id;});if(t){t.split=!t.split;if(!t.split){t.sd2='';t.ed2='';}rEdit();}}
+function togSplit(id){var t=S.tasks.find(function(x){return x.id===id;});if(t){t.split=!t.split;if(!t.split){t.sd2='';t.ed2='';t.desc2='';}else{if(id===5&&!t.desc2)t.desc2='조명 등';if(id===10&&!t.desc2)t.desc2='A/C';}rEdit();}}
 function upT(id,k,v){
   var t=S.tasks.find(function(x){return x.id===id;});if(!t)return;t[k]=v;
   var c=document.getElementById('tc'+id);if(c){c.className='tc'+(t.on?'':' off');var r=c.querySelector('.tr2');if(r){var rng=t.on?(t.id===14&&t.sd===t.ed?dsp(t.sd):(dsp(t.sd)+' ~ '+dsp(t.ed))):'비활성';if(t.on&&t.canSplit&&t.split&&t.sd2&&t.ed2)rng+=' / '+dsp(t.sd2)+'~'+dsp(t.ed2);r.textContent=rng;}}
