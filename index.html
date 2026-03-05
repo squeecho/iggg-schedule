@@ -914,7 +914,7 @@ function rG(){
     var si=d2i(t.sd),ei=Math.min(d2i(t.ed),N-1);
     var isCl=(t.id===14);
     var barColor=isCl?'var(--gn)':'var(--bar)';
-    h+='<tr class="'+(t.on?'':'ia')+'"><td class="d1 sc s1" style="left:0;background:#faf9f7">'+zz(i+1)+'</td><td class="d2 sc s2" style="left:32px;background:#faf9f7;border-right:2px solid var(--bmd);cursor:pointer;text-align:center'+(t.on&&t.split?';text-decoration:underline':'')+'" onclick="chartTaskClick('+t.id+')">'+esc(t.name)+'</td>';
+    h+='<tr class="'+(t.on?'':'ia')+'"><td class="d1 sc s1" style="left:0;background:#faf9f7">'+zz(i+1)+'</td><td class="d2 sc s2" style="left:32px;background:#faf9f7;border-right:2px solid var(--bmd);cursor:pointer;text-align:center'+(t.on&&t.split?';text-decoration:underline;text-underline-offset:3px':'')+'" onclick="chartTaskClick('+t.id+')">'+esc(t.name)+'</td>';
     var fc=isH(ds[0]&&ds[0].ds)?'hol':(ds[0]&&ds[0].w===0?'sun':ds[0]&&ds[0].w===6?'sat':'');
     h+='<td class="dg '+fc+'" colspan="'+N+'" style="overflow:visible;position:relative">';
     ds.forEach(function(d,di){var h2=isH(d.ds),bg=h2?'var(--hc)':d.w===0?'var(--sc)':d.w===6?'var(--ac)':'';if(bg)h+='<div style="position:absolute;top:0;bottom:0;left:'+(di*CW)+'px;width:'+CW+'px;background:'+bg+';pointer-events:none;z-index:0"></div>';
@@ -971,11 +971,11 @@ function oMM(e){
     t[sk]=addD(drag.osd,dd);t[ek]=addD(drag.oed,dd);
   } else if(drag.m==='l'){
     var ls=addD(drag.osd,dd);
-    if(ls>addD(drag.oed,-1))ls=addD(drag.oed,-1);
+    if(ls>drag.oed)ls=drag.oed;
     t[sk]=ls;
   } else {
     var re=addD(drag.oed,dd);
-    if(re<addD(drag.osd,1))re=addD(drag.osd,1);
+    if(re<drag.osd)re=drag.osd;
     t[ek]=re;
   }
   /* 시각적 바: S.sd 이전이면 left:0 고정, 화면 내에서만 표시 */
@@ -1127,11 +1127,11 @@ function oTM(e){
     t[sk]=addD(drag.osd,dd);t[ek]=addD(drag.oed,dd);
   } else if(drag.m==='l'){
     var ls=addD(drag.osd,dd);
-    if(ls>addD(drag.oed,-1))ls=addD(drag.oed,-1);
+    if(ls>drag.oed)ls=drag.oed;
     t[sk]=ls;
   } else {
     var re=addD(drag.oed,dd);
-    if(re<addD(drag.osd,1))re=addD(drag.osd,1);
+    if(re<drag.osd)re=drag.osd;
     t[ek]=re;
   }
   var sel=drag.is2?'.bar[data-id2="'+drag.id+'"]':'.bar[data-id="'+drag.id+'"]';
@@ -1165,8 +1165,18 @@ async function doIMG(){
   sels.forEach(function(el){selPos.push(el.style.position);el.style.position='static';});
   await new Promise(function(r){setTimeout(r,150);});
   try{
-    var tbl=document.getElementById('gt');
-    var canvas=await html2canvas(tbl,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    var tbl=document.getElementById('pa');
+    var origW=tbl.style.width;
+    var gtFinal=document.getElementById('gt');
+    var captureW=gtFinal?(gtFinal.offsetWidth+4):tbl.scrollWidth;
+    tbl.style.width=captureW+'px';
+    var swEl=document.getElementById('scw');
+    var origSW=swEl?swEl.style.width:'';
+    if(swEl)swEl.style.width=captureW+'px';
+    await new Promise(function(r){setTimeout(r,80);});
+    var canvas=await html2canvas(tbl,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false,scrollX:0,scrollY:-window.scrollY,width:captureW,height:tbl.scrollHeight,windowWidth:captureW});
+    tbl.style.width=origW;
+    if(swEl)swEl.style.width=origSW;
     var a=document.createElement('a');
     a.download=today().replace(/-/g,'').substring(2)+' '+(S.pn||'현장명')+' 일정표.png';
     a.href=canvas.toDataURL('image/png');
