@@ -437,7 +437,7 @@ function defaultState(){
   return {
     pn:'',sd:td,ed:te,
     tasks:[
-      {id:1, name:'가설공사',   desc:'자재입고 등',              sd:td,ed:addD(td,4), on:true, canSplit:false},
+      {id:1, name:'가설공사',   desc:'자재입고 등',              sd:td,ed:addD(td,2), on:true, canSplit:false},
       {id:2, name:'철거공사',   desc:'Demolition',               sd:td,ed:addD(td,2), on:false,canSplit:false},
       {id:3, name:'소방공사',   desc:'Fire Safety',              sd:td,ed:addD(td,2), on:false,canSplit:false},
       {id:4, name:'목공사',     desc:'Carpentry',                sd:addD(td,2),ed:addD(td,10),on:true, canSplit:true, split:false,sd2:'',ed2:''},
@@ -449,7 +449,7 @@ function defaultState(){
       {id:10,name:'공조공사',   desc:'HVAC',                     sd:addD(td,8), ed:addD(td,23),on:true, canSplit:true, split:false,sd2:'',ed2:''},
       {id:11,name:'필름공사',   desc:'Film',                     sd:addD(td,2), ed:addD(td,4), on:false,canSplit:false},
       {id:12,name:'가스공사',   desc:'Gas',                      sd:addD(td,23),ed:addD(td,26),on:true, canSplit:false},
-      {id:13,name:'기타공사',   desc:'잔마무리 등',              sd:addD(td,22),ed:addD(td,25),on:true, canSplit:false},
+      {id:13,name:'기타공사',   desc:'잔마무리 등',              sd:addD(te,-3),ed:addD(te,-1),on:true, canSplit:false},
       {id:14,name:'준공청소',   desc:'',                         sd:addD(td,26),ed:addD(td,26),on:true, canSplit:true,split:false}
     ],
     notes:[
@@ -622,7 +622,7 @@ function autoTaskDates(){
 
   /* 가설(1): 0~17% = 초기 5일 */
   var t1=S.tasks.find(function(x){return x.id===1;});
-  if(t1){t1.sd=S.sd;t1.ed=addD(S.sd,e(0.17));}
+  if(t1){t1.sd=S.sd;t1.ed=addD(S.sd,2);}
 
   /* 철거(2): 0~10% */
   var t2=S.tasks.find(function(x){return x.id===2;});
@@ -667,7 +667,7 @@ function autoTaskDates(){
 
   /* 기타(13): 75%~99% */
   var t13=S.tasks.find(function(x){return x.id===13;});
-  if(t13){t13.sd=addD(S.sd,s(0.75));t13.ed=addD(S.sd,e(0.99));}
+  if(t13){t13.ed=addD(S.ed,-1);t13.sd=addD(S.ed,-3);}
 
   /* 소방(3): 말기 85%~95% */
   var t3=S.tasks.find(function(x){return x.id===3;});
@@ -793,7 +793,7 @@ function rEdit(){
   rNE();
 }
 function togC(id){_open=(_open===id)?null:id;rEdit();}
-function togT(id){var t=S.tasks.find(function(x){return x.id===id;});if(t){t.on=!t.on;rEdit();}}
+function togT(id){var t=S.tasks.find(function(x){return x.id===id;});if(t){t.on=!t.on;syncPeriod();sync();rEdit();rChart();}}
 function togSplit(id){var t=S.tasks.find(function(x){return x.id===id;});if(t){t.split=!t.split;if(!t.split){t.sd2='';t.ed2='';t.desc2='';}else{if(id===5&&!t.desc2)t.desc2='조명 등';if(id===10&&!t.desc2)t.desc2='A/C';}rEdit();}}
 function upT(id,k,v){
   var t=S.tasks.find(function(x){return x.id===id;});if(!t)return;t[k]=v;
@@ -917,25 +917,36 @@ function dS2(e,id,m){if(IS_RO)return;e.preventDefault();var t=S.tasks.find(funct
 function oMM(e){
   if(!drag)return;
   var dx=e.clientX-drag.sx,dd=Math.round(dx/CW),t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
-  var os=d2i(drag.osd),oe=d2i(drag.oed);
   var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
-  if(drag.m==='mv'){var ns=cl(os+dd,0,N-1);t[sk]=addD(S.sd,ns);t[ek]=addD(S.sd,cl(ns+(oe-os),0,N-1));}
-  else if(drag.m==='l'){t[sk]=addD(S.sd,cl(os+dd,0,oe));}
-  else{t[ek]=addD(S.sd,cl(oe+dd,os,N-1));}
+  /* 날짜는 절대값으로 자유롭게 이동 (S.sd 이전도 허용) */
+  if(drag.m==='mv'){
+    t[sk]=addD(drag.osd,dd);t[ek]=addD(drag.oed,dd);
+  } else if(drag.m==='l'){
+    var ls=addD(drag.osd,dd);
+    if(ls>addD(drag.oed,-1))ls=addD(drag.oed,-1);
+    t[sk]=ls;
+  } else {
+    var re=addD(drag.oed,dd);
+    if(re<addD(drag.osd,1))re=addD(drag.osd,1);
+    t[ek]=re;
+  }
+  /* 시각적 바: S.sd 이전이면 left:0 고정, 화면 내에서만 표시 */
   var sel=drag.is2?'.bar[data-id2="'+drag.id+'"]':'.bar[data-id="'+drag.id+'"]';
   var bar=document.querySelector(sel);
-  if(bar){var si=d2i(t[sk]),ei=Math.min(d2i(t[ek]),N-1);bar.style.left=(si*CW)+'px';bar.style.width=((ei-si+1)*CW)+'px';}
+  if(bar){var si=Math.max(0,d2i(t[sk])),ei=Math.max(0,d2i(t[ek]));bar.style.left=(si*CW)+'px';bar.style.width=(Math.max(1,ei-si+1)*CW)+'px';}
 }
 function syncPeriod(){
-  var minSd=S.sd, maxEd=S.ed;
+  /* S.sd/S.ed를 모든 활성 공종 날짜 기준으로 완전히 재계산 */
+  var minSd='', maxEd='';
   S.tasks.forEach(function(t){
     if(!t.on)return;
-    if(t.sd&&t.sd<minSd)minSd=t.sd;
-    if(t.ed&&t.ed>maxEd)maxEd=t.ed;
-    if(t.split&&t.ed2&&t.ed2>maxEd)maxEd=t.ed2;
+    if(t.sd&&(!minSd||t.sd<minSd))minSd=t.sd;
+    if(t.ed&&(!maxEd||t.ed>maxEd))maxEd=t.ed;
+    if(t.split&&t.sd2&&(!minSd||t.sd2<minSd))minSd=t.sd2;
+    if(t.split&&t.ed2&&(!maxEd||t.ed2>maxEd))maxEd=t.ed2;
   });
-  S.sd=minSd;
-  S.ed=maxEd;
+  if(minSd)S.sd=minSd;
+  if(maxEd)S.ed=maxEd;
 }
 function oMU(){if(drag){drag=null;syncPeriod();rChart();sync();}document.removeEventListener('mousemove',oMM);document.removeEventListener('mouseup',oMU);}
 function chartTaskClick(id){
@@ -981,7 +992,7 @@ function chartTaskClick(id){
       t.on=false; t._s2off=false;
     }
   }
-  sync();rEdit();rChart();
+  syncPeriod();sync();rEdit();rChart();
 }
 function tI(id,e,m,is2){
   if(IS_RO)return;
@@ -998,15 +1009,22 @@ function oTM(e){
   e.preventDefault();
   var touch=e.touches[0];
   var dx=touch.clientX-drag.sx,dd=Math.round(dx/CW);
-  var t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
-  var os=d2i(drag.osd),oe=d2i(drag.oed);
+  var t=S.tasks.find(function(x){return x.id===drag.id;});
   var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
-  if(drag.m==='mv'){var ns=cl(os+dd,0,N-1);t[sk]=addD(S.sd,ns);t[ek]=addD(S.sd,cl(ns+(oe-os),0,N-1));}
-  else if(drag.m==='l'){t[sk]=addD(S.sd,cl(os+dd,0,oe));}
-  else{t[ek]=addD(S.sd,cl(oe+dd,os,N-1));}
+  if(drag.m==='mv'){
+    t[sk]=addD(drag.osd,dd);t[ek]=addD(drag.oed,dd);
+  } else if(drag.m==='l'){
+    var ls=addD(drag.osd,dd);
+    if(ls>addD(drag.oed,-1))ls=addD(drag.oed,-1);
+    t[sk]=ls;
+  } else {
+    var re=addD(drag.oed,dd);
+    if(re<addD(drag.osd,1))re=addD(drag.osd,1);
+    t[ek]=re;
+  }
   var sel=drag.is2?'.bar[data-id2="'+drag.id+'"]':'.bar[data-id="'+drag.id+'"]';
   var bar=document.querySelector(sel);
-  if(bar){var si=d2i(t[sk]),ei=Math.min(d2i(t[ek]),N-1);bar.style.left=(si*CW)+'px';bar.style.width=((ei-si+1)*CW)+'px';}
+  if(bar){var si=Math.max(0,d2i(t[sk])),ei=Math.max(0,d2i(t[ek]));bar.style.left=(si*CW)+'px';bar.style.width=(Math.max(1,ei-si+1)*CW)+'px';}
 }
 function oTU(){
   if(drag){drag=null;syncPeriod();rChart();sync();}
