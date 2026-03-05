@@ -270,7 +270,8 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 
 
 
-.dg-note-line{position:absolute;top:0;bottom:0;left:50%;width:0;border-left:2px dashed #a16207;z-index:3;pointer-events:none;opacity:.5;}
+.dg-note-line{position:absolute;top:0;bottom:0;width:16px;margin-left:-8px;z-index:4;cursor:ew-resize;opacity:.7;touch-action:none;}
+.dg-note-line::after{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;border-left:2px dashed #a16207;}
 
 </style>
 </head>
@@ -427,7 +428,12 @@ function nDt(n){
   if(n.type==='auto'){var ced=clED();return ced?addD(ced,1):'';}
   if(n.type==='auto_mk'){var t=S.tasks.find(function(x){return x.id===4;});return(t&&t.on&&t.ed)?addD(t.ed,1):'';}
   if(n.type==='auto_sb'){var t=S.tasks.find(function(x){return x.id===8;});return(t&&t.on&&t.ed)?addD(t.ed,2):'';}
-  if(n.id===1){return kitchenDt();}
+  if(n.id===1){
+    if(n.dt)return n.dt;
+    var t9=S.tasks.find(function(x){return x.id===9;});
+    if(t9&&t9.on&&t9.ed)return addD(t9.ed,2);
+    return kitchenDt();
+  }
   return n.dt||'';
 }
 
@@ -877,7 +883,14 @@ function rG(){
     var fc=isH(ds[0]&&ds[0].ds)?'hol':(ds[0]&&ds[0].w===0?'sun':ds[0]&&ds[0].w===6?'sat':'');
     h+='<td class="dg '+fc+'" colspan="'+N+'" style="overflow:visible;position:relative">';
     ds.forEach(function(d,di){var h2=isH(d.ds),bg=h2?'var(--hc)':d.w===0?'var(--sc)':d.w===6?'var(--ac)':'';if(bg)h+='<div style="position:absolute;top:0;bottom:0;left:'+(di*CW)+'px;width:'+CW+'px;background:'+bg+';pointer-events:none;z-index:0"></div>';
-    if(S.notes.some(function(n){return nDt(n)===d.ds;}))h+='<div class="dg-note-line" style="left:'+((di+0.5)*CW)+'px"></div>';
+    S.notes.forEach(function(n){
+      if(nDt(n)===d.ds){
+        var draggable=!IS_RO&&(n.id===4||n.id===5||n.id===1);
+        h+='<div class="dg-note-line" data-nid="'+n.id+'" style="left:'+((di+0.5)*CW)+'px"'
+          +(draggable?' onmousedown="nDragStart(event,'+n.id+')" ontouchstart="nDragStartT(event,'+n.id+')"':'')
+          +'></div>';
+      }
+    });
   });
     var hasSplit=t.on&&t.canSplit&&t.split&&t.sd2&&t.ed2;
     if(t.on&&ei>=si&&si<N){
@@ -934,6 +947,56 @@ function oMM(e){
   var sel=drag.is2?'.bar[data-id2="'+drag.id+'"]':'.bar[data-id="'+drag.id+'"]';
   var bar=document.querySelector(sel);
   if(bar){var si=Math.max(0,d2i(t[sk])),ei=Math.max(0,d2i(t[ek]));bar.style.left=(si*CW)+'px';bar.style.width=(Math.max(1,ei-si+1)*CW)+'px';}
+}
+
+/* 노트 점선 드래그 */
+var nDrag=null;
+function nDragStart(e,nid){
+  if(IS_RO)return;
+  e.preventDefault();e.stopPropagation();
+  var n=S.notes.find(function(x){return x.id===nid;});
+  if(!n)return;
+  /* manual 타입으로 전환해서 dt 직접 저장 */
+  n._origType=n.type;n.type='manual';
+  if(!n.dt)n.dt=nDt(n)||S.sd;
+  nDrag={nid:nid,sx:e.clientX,odt:n.dt};
+  document.addEventListener('mousemove',nDragMove);
+  document.addEventListener('mouseup',nDragEnd);
+}
+function nDragStartT(e,nid){
+  if(IS_RO)return;
+  e.preventDefault();e.stopPropagation();
+  if(navigator.vibrate)navigator.vibrate(20);
+  var n=S.notes.find(function(x){return x.id===nid;});
+  if(!n)return;
+  n._origType=n.type;n.type='manual';
+  if(!n.dt)n.dt=nDt(n)||S.sd;
+  nDrag={nid:nid,sx:e.touches[0].clientX,odt:n.dt};
+  document.addEventListener('touchmove',nDragMoveT,{passive:false});
+  document.addEventListener('touchend',nDragEnd);
+}
+function nDragMove(e){
+  if(!nDrag)return;
+  var dx=e.clientX-nDrag.sx,dd=Math.round(dx/CW);
+  var n=S.notes.find(function(x){return x.id===nDrag.nid;});
+  if(n)n.dt=addD(nDrag.odt,dd);
+  rChart();rSC();
+}
+function nDragMoveT(e){
+  if(!nDrag)return;
+  e.preventDefault();
+  var dx=e.touches[0].clientX-nDrag.sx,dd=Math.round(dx/CW);
+  var n=S.notes.find(function(x){return x.id===nDrag.nid;});
+  if(n)n.dt=addD(nDrag.odt,dd);
+  rChart();rSC();
+}
+function nDragEnd(){
+  if(nDrag){autoSave();}
+  nDrag=null;
+  document.removeEventListener('mousemove',nDragMove);
+  document.removeEventListener('mouseup',nDragEnd);
+  document.removeEventListener('touchmove',nDragMoveT);
+  document.removeEventListener('touchend',nDragEnd);
 }
 function syncPeriod(){
   /* S.sd/S.ed를 모든 활성 공종 날짜 기준으로 완전히 재계산 */
