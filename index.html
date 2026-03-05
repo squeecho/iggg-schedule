@@ -98,9 +98,9 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .th2{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;user-select:none;}
 .tn{width:24px;height:24px;border-radius:50%;background:var(--bar);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .tc.off .tn{background:var(--mu2);}
-.ti{flex:1;min-width:0;overflow:hidden;}
+.ti{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:2px;}
 .tnm{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tr2{font-size:11px;font-family:'DM Mono',monospace;color:var(--bar);font-weight:500;text-align:right;margin-left:6px;white-space:nowrap;flex-shrink:0;}
+.tr2{font-size:11px;font-family:'DM Mono',monospace;color:var(--bar);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tc.off .tr2{color:var(--mu2);}
 .tv{font-size:11px;color:var(--mu2);transition:transform .2s;margin-left:4px;flex-shrink:0;}
 .tv.op{transform:rotate(180deg);}
@@ -996,7 +996,7 @@ function rEdit(){
     var inner='<div class="th2" onclick="togC('+t.id+')">'+'<div class="tn">'+zz(i+1)+'</div><div class="ti"><div class="tnm">'+esc(t.name);
     if(isCl)inner+='<span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:10px;padding:1px 6px;margin-left:6px">청소</span>';
     if(t.canSplit&&t.split)inner+='<span style="font-size:10px;background:#dbeafe;color:#1e40af;border-radius:10px;padding:1px 6px;margin-left:4px;white-space:nowrap;flex-shrink:0">1+2차</span>';
-    inner+='</div></div><div class="tr2">'+rng+'</div><div class="tv'+(io?' op':'')+'" id="cv'+t.id+'">&#9660;</div></div>';
+    inner+='</div><div class="tr2">'+rng+'</div></div><div class="tv'+(io?' op':'')+'" id="cv'+t.id+'">&#9660;</div></div>';
     inner+='<div class="tbd'+(io?' op':'')+'" id="bd'+t.id+'">';
     inner+='<div class="togr"><span>공종 활성화</span><div class="tog'+(t.on?' on':'')+'" onclick="togT('+t.id+')"><div class="tk2"></div></div></div>';
     inner+='<div class="fr"><div class="ff"><label>공종명</label><input class="fi" type="text" value="'+esc(t.name)+'" oninput="upT('+t.id+',\'name\',this.value)"></div><div class="ff"><label>설명</label><input class="fi" type="text" value="'+esc(t.desc)+'" placeholder="예) 천장, 벽체 등" oninput="upT('+t.id+',\'desc\',this.value)"></div></div>';
