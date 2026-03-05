@@ -986,6 +986,7 @@ function chartTaskClick(id){
 function tI(id,e,m,is2){
   if(IS_RO)return;
   e.preventDefault();e.stopPropagation();
+  if(navigator.vibrate)navigator.vibrate(30);
   var t=S.tasks.find(function(x){return x.id===id;});
   var touch=e.touches[0];
   drag={id:id,m:m||'mv',sx:touch.clientX,osd:is2?t.sd2:t.sd,oed:is2?t.ed2:t.ed,is2:!!is2};
