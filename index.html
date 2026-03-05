@@ -1158,7 +1158,7 @@ async function doIMG(){
     var tbl=document.getElementById('gt');
     var canvas=await html2canvas(tbl,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false});
     var a=document.createElement('a');
-    a.download=(S.pn||'일정표')+'_일정표.png';
+    a.download=today().replace(/-/g,'').substring(2)+' '+(S.pn||'현장명')+' 일정표.png';
     a.href=canvas.toDataURL('image/png');
     document.body.appendChild(a);
     a.click();
