@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{--bg:#f2f0eb;--sf:#fff;--bd:#e0dbd2;--bmd:#ccc7bc;--tx:#18170f;--mu:#7a7870;--mu2:#b5b0a8;
 --bar:#cbd5e1;--barh:#94a3b8;--al:#eef2fd;
@@ -23,7 +22,6 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .tb-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);line-height:1;}
 .tb-site{font-size:15px;font-weight:900;letter-spacing:-.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
 .tb-site em{color:var(--bar);font-style:normal;}
-/* pnm removed */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:8px;font-size:12px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer;border:1.5px solid;white-space:nowrap;transition:all .14s;}
 .bg2{border-color:#444;background:transparent;color:#ccc;}.bg2:hover{border-color:#aaa;color:#fff;}
 .bur{border-color:#475569;background:transparent;color:#94a3b8;font-size:14px;font-weight:700;padding:10px 16px;min-width:72px;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;opacity:.28;cursor:default;pointer-events:none;}.bur.on{opacity:1;color:#1e293b;border-color:#475569;cursor:pointer;pointer-events:auto;font-weight:800;}@media(hover:hover){.bur.on:hover{background:rgba(148,163,184,.15);}}.bur:disabled{opacity:.28;cursor:default;}.bur.dim{opacity:.28;cursor:default;pointer-events:none;}.bp-group{display:flex;gap:6px;margin-left:auto;}
@@ -31,7 +29,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .bo{border-color:var(--bar);background:transparent;color:var(--bar);}.bo:hover{background:var(--al);}
 .bp{border-color:var(--am);background:var(--am);color:#fff;}.bp:hover{background:#92400e;}
 .bs2{border-color:var(--gn);background:var(--gn);color:#fff;}.bs2:hover{background:#047857;}
-.tabs{display:flex;background:var(--sf);border-bottom:2px solid var(--bd);position:sticky;top:47px;z-index:400;}
+.tabs{display:flex;background:var(--sf);border-bottom:2px solid var(--bd);position:sticky;top:52px;z-index:400;}
 .tab{flex:1;padding:11px 6px;text-align:center;font-size:13px;font-weight:700;color:var(--mu);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;margin-bottom:-2px;}
 .tab.on{color:var(--bar);border-bottom-color:var(--bar);}
 .pg{display:none;}.pg.on{display:block;}
@@ -60,8 +58,8 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .pn-item-del:hover{color:var(--rd);}
 .pn-row{display:flex;gap:0;width:100%;}
 .pn-row .fi{border-radius:8px 0 0 8px;flex:1;}
-.pnsb{padding:0 18px;background:var(--bar);color:#fff;border:1.5px solid var(--bar);border-left:none;border-radius:0 8px 8px 0;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:background .14s;flex-shrink:0;}
-.pnsb:hover{background:var(--barh);}
+.pnsb{padding:0 18px;background:#1e293b;color:#fff;border:1.5px solid #1e293b;border-left:none;border-radius:0 8px 8px 0;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:background .14s;flex-shrink:0;}
+.pnsb:hover{background:#0f172a;}
 .pnsb.ok{background:var(--gn);border-color:var(--gn);}
 .pnchips{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
 .pnchip{display:inline-flex;flex-direction:column;background:#fff;border:1.5px solid var(--bd);border-radius:14px;overflow:hidden;transition:border-color .14s,box-shadow .14s;cursor:pointer;min-width:160px;max-width:240px;}
@@ -147,7 +145,6 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .sc{position:sticky;z-index:5;}
 .s1{left:0;width:32px;min-width:32px;}
 .s2{left:32px;width:90px;min-width:90px;border-right:2px solid var(--bmd)!important;}
-.s3{display:none;}
 .hpm{background:#eeebe4;text-align:center;padding:10px 8px;border-bottom:1px solid var(--bd);}
 .hpn{font-size:16px;font-weight:900;letter-spacing:-.3px;}.hps{font-size:11px;color:var(--mu);margin-top:3px;}
 .hm2{background:#e8e5de;text-align:center;font-size:10px;font-weight:700;color:var(--mu);padding:5px 4px;letter-spacing:.5px;}
@@ -233,7 +230,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .cal-day.sel-s.sel-e{background:transparent;}
 .cal-day.today .cal-dn::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--bar);}
 .cal-dn{position:relative;display:inline-block;width:30px;height:30px;line-height:30px;border-radius:50%;}
-.cal-dur{text-align:center;padding:8px;font-size:12px;font-weight:700;color:var(--bar);background:#eef2fd;border-top:1px solid var(--bd);}
+.cal-dur{text-align:center;padding:8px;font-size:12px;font-weight:700;color:#18170f;background:#eef2fd;border-top:1px solid var(--bd);}
 
 .tcal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;display:flex;align-items:flex-end;justify-content:center;}
 @media(min-width:480px){.tcal-ov{align-items:center;}}
@@ -395,7 +392,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 
 <script>
 var WK=['일','월','화','수','목','금','토'];
-var _open=null,IS_RO=false,_ns=30;
+var _open=null,IS_RO=false;
 var RK='cs_recent';
 var _undoStack=[],_redoStack=[];
 function pushUndo(){_undoStack.push(JSON.stringify(S));if(_undoStack.length>30)_undoStack.shift();_redoStack=[];_updUR();}
@@ -424,11 +421,58 @@ var HOLS={'2025-01-01':'신정','2025-01-28':'설전날','2025-01-29':'설날','
   '2025-03-01':'삼일절','2025-05-05':'어린이날','2025-06-06':'현충일','2025-08-15':'광복절',
   '2025-10-03':'개천절','2025-10-05':'추석전날','2025-10-06':'추석','2025-10-07':'추석후날',
   '2025-10-08':'대체공휴일','2025-10-09':'한글날','2025-12-25':'크리스마스',
+  /* 2026 */
   '2026-01-01':'신정','2026-02-16':'설전날','2026-02-17':'설날','2026-02-18':'설후날',
-  '2026-03-01':'삼일절','2026-03-02':'대체공휴일','2026-05-05':'어린이날','2026-05-24':'부처님오신날',
-  '2026-06-06':'현충일','2026-08-15':'광복절',
-  '2026-10-03':'개천절','2026-10-04':'추석전날','2026-10-05':'추석','2026-10-06':'추석후날',
-  '2026-10-07':'대체공휴일','2026-10-09':'한글날','2026-12-25':'크리스마스'};
+  '2026-03-01':'삼일절','2026-03-02':'대체공휴일(삼일절)','2026-05-05':'어린이날','2026-05-24':'부처님오신날',
+  '2026-05-25':'대체공휴일(부처님오신날)','2026-06-06':'현충일',
+  '2026-08-15':'광복절','2026-08-17':'대체공휴일(광복절)',
+  '2026-09-24':'추석전날','2026-09-25':'추석','2026-09-26':'추석후날',
+  '2026-10-03':'개천절','2026-10-05':'대체공휴일(개천절)','2026-10-09':'한글날','2026-12-25':'크리스마스',
+  /* 2027 */
+  '2027-01-01':'신정',
+  '2027-02-06':'설전날','2027-02-07':'설날','2027-02-08':'설후날','2027-02-09':'대체공휴일(설날)',
+  '2027-03-01':'삼일절',
+  '2027-05-05':'어린이날','2027-05-13':'부처님오신날',
+  '2027-06-06':'현충일','2027-06-07':'대체공휴일(현충일)',
+  '2027-08-15':'광복절','2027-08-16':'대체공휴일(광복절)',
+  '2027-09-14':'추석전날','2027-09-15':'추석','2027-09-16':'추석후날',
+  '2027-10-03':'개천절','2027-10-04':'대체공휴일(개천절)',
+  '2027-10-09':'한글날','2027-10-11':'대체공휴일(한글날)',
+  '2027-12-25':'크리스마스','2027-12-27':'대체공휴일(크리스마스)',
+  /* 2028 */
+  '2028-01-01':'신정',
+  '2028-01-26':'설전날','2028-01-27':'설날','2028-01-28':'설후날',
+  '2028-03-01':'삼일절',
+  '2028-05-02':'부처님오신날','2028-05-05':'어린이날',
+  '2028-06-06':'현충일',
+  '2028-08-15':'광복절',
+  '2028-10-02':'추석전날','2028-10-03':'추석','2028-10-04':'추석후날','2028-10-05':'대체공휴일(개천절)',
+  '2028-10-09':'한글날',
+  '2028-12-25':'크리스마스',
+  /* 2029 */
+  '2029-01-01':'신정',
+  '2029-02-12':'설전날','2029-02-13':'설날','2029-02-14':'설후날',
+  '2029-03-01':'삼일절','2029-03-03':'대체공휴일(삼일절)',
+  '2029-05-05':'어린이날','2029-05-06':'대체공휴일(어린이날)',
+  '2029-05-20':'부처님오신날',
+  '2029-06-06':'현충일',
+  '2029-08-15':'광복절',
+  '2029-09-21':'추석전날','2029-09-22':'추석','2029-09-23':'추석후날','2029-09-24':'대체공휴일(추석)',
+  '2029-10-03':'개천절',
+  '2029-10-09':'한글날',
+  '2029-12-25':'크리스마스',
+  /* 2030 */
+  '2030-01-01':'신정',
+  '2030-02-02':'설전날','2030-02-03':'설날','2030-02-04':'설후날','2030-02-05':'대체공휴일(설날)',
+  '2030-03-01':'삼일절','2030-03-04':'대체공휴일(삼일절)',
+  '2030-05-05':'어린이날','2030-05-06':'대체공휴일(어린이날)',
+  '2030-05-09':'부처님오신날',
+  '2030-06-06':'현충일',
+  '2030-08-15':'광복절',
+  '2030-09-11':'추석전날','2030-09-12':'추석','2030-09-13':'추석후날',
+  '2030-10-03':'개천절',
+  '2030-10-09':'한글날',
+  '2030-12-25':'크리스마스'};
 
 /* helpers */
 function pD(s){return s?new Date(s+'T00:00:00'):null;}
@@ -534,7 +578,7 @@ function pnBtnClick(){
     var nm=S.pn.trim();var arr=getRecent();var ci=arr.findIndex(function(x){return x.pn===nm;});
     var now=nowTS();
     if(ci>=0){arr[ci]=Object.assign({},arr[ci],{pn:nm,sd:S.sd,ed:S.ed,savedAt:now,snap:JSON.stringify(S)});setRecent(arr);try{localStorage.setItem('cs_last',nm);}catch(e){}}
-    S=defaultState();_open=null;calInit();sync();rEdit();rChips();rChart();
+    S=defaultState();autoTaskDates();_open=null;calInit();sync();rEdit();rChips();rChart();
   }else{saveProject();}
 }
 function saveProject(){
@@ -543,8 +587,9 @@ function saveProject(){
   var arr=getRecent();var ci=arr.findIndex(function(x){return x.pn===nm;});
   var now=nowTS();var isNew=ci<0;
   if(isNew){
-    /* 신규 등록: S도 clean defaultState로 리셋해야 이후 autoSave가 이전 공정으로 덮어쓰지 않음 */
+    /* 신규 등록: defaultState 후 autoTaskDates 적용하여 공종 날짜 비율 계산 */
     var ds=defaultState();ds.pn=nm;
+    S=ds;autoTaskDates();ds=S;
     var upd={pn:nm,sd:ds.sd,ed:ds.ed,createdAt:now,savedAt:now,snap:JSON.stringify(ds)};
     arr.unshift(upd);if(arr.length>8)arr=arr.slice(0,8);
     setRecent(arr);try{localStorage.setItem('cs_last',nm);}catch(e){}
@@ -598,12 +643,10 @@ function deleteRecent(pn,ev){
 function delChip(pn,ev){if(ev){ev.stopPropagation();ev.preventDefault();}deleteRecent(pn,null);}
 function newProject(){
   if(S.pn&&confirm('현재 현장을 저장하고 새 현장을 시작할까요?')){saveProject();}
-  S=defaultState();_open=null;sync();rEdit();
+  S=defaultState();autoTaskDates();_open=null;sync();rEdit();
   document.getElementById('fn').focus();
 }
 var _dropHide=null;
-function showDrop(){}
-function hideDrop(){}
 function toggleConfirmed(pn,e){
   if(e){e.stopPropagation();e.preventDefault();}
   var arr=getRecent();
@@ -877,6 +920,7 @@ function calClick(el){
   var ds=el.querySelector('.cal-dn').dataset.ds;
   if(!ds)return;
   if(_cPhase===0){
+    pushUndo();
     var oldSd=S.sd;
     S.sd=ds;S.ed='';
     if(oldSd&&oldSd!==ds)shiftTasks(oldSd,ds);
@@ -890,7 +934,7 @@ function calClick(el){
     /* 달력 마지막날 = 준공청소 날짜로 자동 설정 */
     var t14=S.tasks&&S.tasks.find(function(x){return x.id===14;});
     if(t14){t14.on=true;t14.sd=ds;t14.ed=ds;}
-    calRender();upBadge();rEdit();rChart();
+    calRender();upBadge();rEdit();rChart();autoSave();
   }
 }
 function shiftTasks(oldSd,newSd){
@@ -1130,16 +1174,14 @@ function oMM(e){
   if(!drag)return;
   var dx=e.clientX-drag.sx,dd=Math.round(dx/CW),t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
   var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
-  var minD=S.sd,maxD=addD(S.sd,N-1);
+  var maxD=addD(S.sd,N-1);
   if(drag.m==='mv'){
     var dur=dif(drag.osd,drag.oed);
     var ns=addD(drag.osd,dd),ne=addD(drag.oed,dd);
-    if(ns<minD){ns=minD;ne=addD(minD,dur);}
     if(ne>maxD){ne=maxD;ns=addD(maxD,-dur);}
     t[sk]=ns;t[ek]=ne;
   } else if(drag.m==='l'){
     var ls=addD(drag.osd,dd);
-    if(ls<minD)ls=minD;
     if(ls>drag.oed)ls=drag.oed;
     t[sk]=ls;
   } else {
@@ -1312,16 +1354,14 @@ function oTM(e){
   var dx=touch.clientX-drag.sx,dd=Math.round(dx/CW);
   var t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
   var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
-  var minD=S.sd,maxD=addD(S.sd,N-1);
+  var maxD=addD(S.sd,N-1);
   if(drag.m==='mv'){
     var dur=dif(drag.osd,drag.oed);
     var ns=addD(drag.osd,dd),ne=addD(drag.oed,dd);
-    if(ns<minD){ns=minD;ne=addD(minD,dur);}
     if(ne>maxD){ne=maxD;ns=addD(maxD,-dur);}
     t[sk]=ns;t[ek]=ne;
   } else if(drag.m==='l'){
     var ls=addD(drag.osd,dd);
-    if(ls<minD)ls=minD;
     if(ls>drag.oed)ls=drag.oed;
     t[sk]=ls;
   } else {
@@ -1418,11 +1458,6 @@ async function doPDF(){
   }catch(err){console.error(err);toast('PDF 오류 — 브라우저 인쇄(Ctrl+P)로 저장해주세요.');}
   finally{sels.forEach(function(el){el.style.position=el.dataset.op||'';});ca.style.visibility='';document.getElementById('pov').style.display='none';document.querySelectorAll('.no-print').forEach(function(el){el.style.display='';});}
 }
-
-/* SHARE */
-
-
-
 
 /* READONLY */
 function eRO(){IS_RO=true;var b=document.createElement('div');b.className='rob';b.textContent='읽기 전용 · 수정 불가';document.getElementById('tabs').insertAdjacentElement('beforebegin',b);document.getElementById('tabs').style.display='none';document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});document.getElementById('pc').classList.add('on');document.getElementById('ca').innerHTML='<button class="btn bp" onclick="doPDF()">PDF 저장</button><button class="btn bp" style="background:#6b7280;margin-left:4px" onclick="doIMG()">이미지 저장</button><span style="font-size:12px;color:var(--mu);margin-left:6px"></span>';rChart();}
@@ -1550,8 +1585,6 @@ function openNCal(id){
   document.getElementById('tcalOv').style.display='flex';
   tcalRender();
 }
-/* tcalClick을 노트용으로 override */
-var _origTcalClick=null;
 function tcalClickNote(el){
   var ds=el.querySelector('.tcal-dn').dataset.ds; if(!ds)return;
   /* 단일 날짜 선택 */
