@@ -77,8 +77,8 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .th2{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;user-select:none;}
 .tn{width:24px;height:24px;border-radius:50%;background:var(--bar);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .tc.off .tn{background:var(--mu2);}
-.ti{flex:1;min-width:0;}
-.tnm{font-size:14px;font-weight:700;}
+.ti{flex:1;min-width:0;overflow:hidden;}
+.tnm{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tr2{font-size:11px;font-family:'DM Mono',monospace;color:var(--bar);font-weight:500;text-align:right;margin-left:6px;white-space:nowrap;flex-shrink:0;}
 .tc.off .tr2{color:var(--mu2);}
 .tv{font-size:11px;color:var(--mu2);transition:transform .2s;margin-left:4px;flex-shrink:0;}
@@ -142,7 +142,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .d3{background:#fdfcfa;padding:0 7px;font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--bmd)!important;}
 .ia .d1,.ia .d2,.ia .d3{color:#ccc;}
 .dg{position:relative;height:38px;padding:0;width:30px;min-width:30px;overflow:visible;border-right:1px dashed rgba(0,0,0,.1);}
-.bar{position:absolute;top:50%;transform:translateY(-50%);height:22px;border-radius:0;background:var(--bar);z-index:3;cursor:grab;overflow:visible;display:flex;align-items:center;user-select:none;-webkit-user-select:none;min-width:4px;}
+.bar{position:absolute;top:50%;transform:translateY(-50%);height:22px;border-radius:0;touch-action:none;background:var(--bar);z-index:3;cursor:grab;overflow:visible;display:flex;align-items:center;user-select:none;-webkit-user-select:none;min-width:4px;}
 .bar.bar2{top:calc(50% - 4px);}
 .bar.bar-b2{top:calc(50% + 4px);}
 .bar.bar-grn{background:var(--gn);}
@@ -474,10 +474,8 @@ function saveProject(){
   arr.unshift({pn:nm,sd:S.sd,ed:S.ed,savedAt:today(),snap:JSON.stringify(S)});
   if(arr.length>8)arr=arr.slice(0,8);
   setRecent(arr);
-  /* 저장 후 초기화 - 새 현장 입력 대기 */
-  S=defaultState();_open=null;
-  var fnEl=document.getElementById('fn');
-  if(fnEl){fnEl.blur();fnEl.value='';}
+  /* 저장 후: 날짜/공종은 초기화, 현장명은 유지 */
+  S=defaultState();S.pn=nm;_open=null;
   calInit();sync();rEdit();rChips();rChart();
   toast(nm+' 저장됐어요!');
 }
@@ -615,6 +613,80 @@ function calRender(){
   if(S.sd&&S.ed&&dur){dur.style.display='';dur.textContent=S.sd+' ~ '+S.ed+'  (총 '+(dif(S.sd,S.ed)+1)+'일)';}
   else if(dur)dur.style.display='none';
 }
+function autoTaskDates(){
+  var total=dif(S.sd,S.ed);
+  if(total<=0)return;
+  /* PDF 기준 28일 공사 비율로 계산, 일요일 포함 연속 배치 */
+  function s(ratio){return Math.round(total*ratio);}
+  function e(ratio){return Math.min(total,Math.round(total*ratio));}
+
+  /* 가설(1): 0~17% = 초기 5일 */
+  var t1=S.tasks.find(function(x){return x.id===1;});
+  if(t1){t1.sd=S.sd;t1.ed=addD(S.sd,e(0.17));}
+
+  /* 철거(2): 0~10% */
+  var t2=S.tasks.find(function(x){return x.id===2;});
+  if(t2){t2.sd=S.sd;t2.ed=addD(S.sd,e(0.10));}
+
+  /* 목공(4): 7%~25% */
+  var t4=S.tasks.find(function(x){return x.id===4;});
+  if(t4){t4.sd=addD(S.sd,s(0.07));t4.ed=addD(S.sd,e(0.25));}
+
+  /* 전기(5) 1차: 7%~25% */
+  var t5=S.tasks.find(function(x){return x.id===5;});
+  if(t5){t5.sd=addD(S.sd,s(0.07));t5.ed=addD(S.sd,e(0.25));}
+
+  /* 도장(6): 46%~60% */
+  var t6=S.tasks.find(function(x){return x.id===6;});
+  if(t6){t6.sd=addD(S.sd,s(0.46));t6.ed=addD(S.sd,e(0.60));}
+
+  /* 금속/타일(7): 32%~46% */
+  var t7=S.tasks.find(function(x){return x.id===7;});
+  if(t7){t7.sd=addD(S.sd,s(0.32));t7.ed=addD(S.sd,e(0.46));}
+
+  /* 설비/필름(8): 25%~46% */
+  var t8=S.tasks.find(function(x){return x.id===8;});
+  if(t8){t8.sd=addD(S.sd,s(0.25));t8.ed=addD(S.sd,e(0.46));}
+
+  /* 타일(9): 57%~75% - 도장 이후 */
+  var t9=S.tasks.find(function(x){return x.id===9;});
+  var t9Start=t6&&t6.ed?addD(t6.ed,0):addD(S.sd,s(0.57));
+  if(t9){t9.sd=t9Start;t9.ed=addD(t9Start,Math.max(3,e(0.18)));}
+
+  /* 공조(10) 1차: 28%~39% */
+  var t10=S.tasks.find(function(x){return x.id===10;});
+  if(t10){t10.sd=addD(S.sd,s(0.28));t10.ed=addD(S.sd,e(0.39));}
+
+  /* 바닥(11): 없으면 타일 이후 */
+  var t11=S.tasks.find(function(x){return x.id===11;});
+  if(t11){t11.sd=addD(S.sd,s(0.57));t11.ed=addD(S.sd,e(0.75));}
+
+  /* 가스(12): 85%~93% */
+  var t12=S.tasks.find(function(x){return x.id===12;});
+  if(t12){t12.sd=addD(S.sd,s(0.85));t12.ed=addD(S.sd,e(0.93));}
+
+  /* 기타(13): 75%~99% */
+  var t13=S.tasks.find(function(x){return x.id===13;});
+  if(t13){t13.sd=addD(S.sd,s(0.75));t13.ed=addD(S.sd,e(0.99));}
+
+  /* 소방(3): 말기 85%~95% */
+  var t3=S.tasks.find(function(x){return x.id===3;});
+  if(t3){t3.sd=addD(S.sd,s(0.85));t3.ed=addD(S.sd,e(0.95));}
+
+  /* 2차 분할: 전기(5) 2차 = 78%~96% 항상 활성화, 공조(10) 2차 = 75%~89% */
+  if(t5){
+    t5.split=true;
+    if(!t5.sd2||!t5.ed2){t5.sd2=addD(S.sd,s(0.78));t5.ed2=addD(S.sd,e(0.96));}
+    if(!t5.desc2)t5.desc2='조명 등';
+  }
+  if(t10&&t10.split){
+    if(!t10.sd2||!t10.ed2){t10.sd2=addD(S.sd,s(0.75));t10.ed2=addD(S.sd,e(0.89));}
+  }
+
+  /* 준공청소(14): 마지막날 고정 */
+  var t14=S.tasks.find(function(x){return x.id===14;});
+  if(t14){t14.on=true;t14.sd=S.ed;t14.ed=S.ed;}
+}
 function calClick(el){
   var ds=el.querySelector('.cal-dn').dataset.ds;
   if(!ds)return;
@@ -627,6 +699,8 @@ function calClick(el){
   } else {
     if(ds<=S.sd){var tmp=S.sd;S.sd=ds;ds=tmp;}
     S.ed=ds;_cPhase=0;
+    /* 공종 날짜 자동배치 */
+    autoTaskDates();
     /* 달력 마지막날 = 준공청소 날짜로 자동 설정 */
     var t14=S.tasks&&S.tasks.find(function(x){return x.id===14;});
     if(t14){t14.on=true;t14.sd=ds;t14.ed=ds;}
@@ -642,9 +716,13 @@ function shiftTasks(oldSd,newSd){
     if(t.ed2)t.ed2=addD(t.ed2,delta);
   });
   if(S.ed)S.ed=addD(S.ed,delta);
+}function onDC(){
+  var ns=document.getElementById('fs').value,ne=document.getElementById('fend').value;
+  if(ns)S.sd=ns;if(ne)S.ed=ne;upBadge();rEdit();
 }
+
+/* mode */
 function scaleTasks(oldSd,oldEd,newSd,newEd){
-  /* 공종 날짜를 새 공사기간에 비율로 재배치 */
   var oldLen=dif(oldSd,oldEd);
   var newLen=dif(newSd,newEd);
   if(oldLen<=0)return;
@@ -653,7 +731,6 @@ function scaleTasks(oldSd,oldEd,newSd,newEd){
     var offset=dif(oldSd,ds);
     var ratio=offset/oldLen;
     var newOffset=Math.round(ratio*newLen);
-    /* 범위 내로 clamp */
     newOffset=Math.max(0,Math.min(newLen,newOffset));
     return addD(newSd,newOffset);
   }
@@ -669,12 +746,6 @@ function scaleTasks(oldSd,oldEd,newSd,newEd){
     }
   });
 }
-function onDC(){
-  var ns=document.getElementById('fs').value,ne=document.getElementById('fend').value;
-  if(ns)S.sd=ns;if(ne)S.ed=ne;upBadge();rEdit();
-}
-
-/* mode */
 function sw(m){if(IS_RO)return;document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});document.getElementById('p'+m).classList.add('on');document.getElementById(m==='e'?'te':'tc2').classList.add('on');if(m==='c')rChart();}
 
 /* EDIT RENDER */
@@ -689,7 +760,7 @@ function rEdit(){
     dv.className='tc'+(t.on?'':' off');dv.id='tc'+t.id;
     var inner='<div class="th2" onclick="togC('+t.id+')">'+'<div class="tn">'+zz(i+1)+'</div><div class="ti"><div class="tnm">'+esc(t.name);
     if(isCl)inner+='<span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:10px;padding:1px 6px;margin-left:6px">청소</span>';
-    if(t.canSplit&&t.split)inner+='<span style="font-size:10px;background:#dbeafe;color:#1e40af;border-radius:10px;padding:1px 6px;margin-left:4px">1+2차</span>';
+    if(t.canSplit&&t.split)inner+='<span style="font-size:10px;background:#dbeafe;color:#1e40af;border-radius:10px;padding:1px 6px;margin-left:4px;white-space:nowrap;flex-shrink:0">1+2차</span>';
     inner+='</div></div><div class="tr2">'+rng+'</div><div class="tv'+(io?' op':'')+'" id="cv'+t.id+'">&#9660;</div></div>';
     inner+='<div class="tbd'+(io?' op':'')+'" id="bd'+t.id+'">';
     inner+='<div class="togr"><span>공종 활성화</span><div class="tog'+(t.on?' on':'')+'" onclick="togT('+t.id+')"><div class="tk2"></div></div></div>';
@@ -802,7 +873,7 @@ function rG(){
     var si=d2i(t.sd),ei=Math.min(d2i(t.ed),N-1);
     var isCl=(t.id===14);
     var barColor=isCl?'var(--gn)':'var(--bar)';
-    h+='<tr class="'+(t.on?'':'ia')+'"><td class="d1 sc s1" style="left:0;background:#faf9f7">'+zz(i+1)+'</td><td class="d2 sc s2" style="left:32px;background:#faf9f7;border-right:2px solid var(--bmd)">'+esc(t.name)+'</td>';
+    h+='<tr class="'+(t.on?'':'ia')+'"><td class="d1 sc s1" style="left:0;background:#faf9f7">'+zz(i+1)+'</td><td class="d2 sc s2" style="left:32px;background:#faf9f7;border-right:2px solid var(--bmd);cursor:pointer" onclick="chartTaskClick('+t.id+')">'+esc(t.name)+(t.canSplit&&t.on?'<span style="font-size:9px;color:var(--bar);margin-left:4px">'+(t.split?'[2차▼]':'[2차]')+'</span>':'')+'</td>';
     var fc=isH(ds[0]&&ds[0].ds)?'hol':(ds[0]&&ds[0].w===0?'sun':ds[0]&&ds[0].w===6?'sat':'');
     h+='<td class="dg '+fc+'" colspan="'+N+'" style="overflow:visible;position:relative">';
     ds.forEach(function(d,di){var h2=isH(d.ds),bg=h2?'var(--hc)':d.w===0?'var(--sc)':d.w===6?'var(--ac)':'';if(bg)h+='<div style="position:absolute;top:0;bottom:0;left:'+(di*CW)+'px;width:'+CW+'px;background:'+bg+';pointer-events:none;z-index:0"></div>';
@@ -812,13 +883,13 @@ function rG(){
     if(t.on&&ei>=si&&si<N){
       var lx=si*CW,wx=(ei-si+1)*CW;
       var topStyle=hasSplit?'top:26%;':'top:50%;';
-      h+='<div class="bar" data-id="'+t.id+'" style="left:'+lx+'px;width:'+wx+'px;position:absolute;'+topStyle+'transform:translateY(-50%);z-index:2;background:'+barColor+'" onmousedown="dS(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">'+(hasSplit?'[1차] ':'')+esc(t.name)+(t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
+      h+='<div class="bar" data-id="'+t.id+'" style="left:'+lx+'px;width:'+wx+'px;position:absolute;'+topStyle+'transform:translateY(-50%);z-index:2;background:'+barColor+'" onmousedown="dS(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event,\'mv\',false)"><div class="bh l" onmousedown="dS(event,'+t.id+',\'l\');event.stopPropagation()" ontouchstart="tI('+t.id+',event,\'l\',false);event.stopPropagation()"></div><span class="bt">'+(hasSplit?'[1차] ':'')+esc(t.name)+(t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS(event,'+t.id+',\'r\');event.stopPropagation()" ontouchstart="tI('+t.id+',event,\'r\',false);event.stopPropagation()"></div></div>';
     }
     if(hasSplit){
       var si2=d2i(t.sd2),ei2=Math.min(d2i(t.ed2),N-1);
       if(ei2>=si2&&si2<N){
         var lx2=si2*CW,wx2=(ei2-si2+1)*CW;
-        h+='<div class="bar" data-id2="'+t.id+'" style="left:'+lx2+'px;width:'+wx2+'px;position:absolute;top:74%;transform:translateY(-50%);z-index:2;background:'+barColor+';opacity:.8" onmousedown="dS2(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS2(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">[2차] '+esc(t.name)+(t.desc2?' | '+esc(t.desc2):t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS2(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
+        h+='<div class="bar" data-id2="'+t.id+'" style="left:'+lx2+'px;width:'+wx2+'px;position:absolute;top:74%;transform:translateY(-50%);z-index:2;background:'+barColor+';opacity:.8" onmousedown="dS2(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event,\'mv\',true)"><div class="bh l" onmousedown="dS2(event,'+t.id+',\'l\');event.stopPropagation()" ontouchstart="tI('+t.id+',event,\'l\',true);event.stopPropagation()"></div><span class="bt">[2차] '+esc(t.name)+(t.desc2?' | '+esc(t.desc2):t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS2(event,'+t.id+',\'r\');event.stopPropagation()" ontouchstart="tI('+t.id+',event,\'r\',true);event.stopPropagation()"></div></div>';
       }
     }
     h+='</td></tr>';
@@ -855,8 +926,92 @@ function oMM(e){
   var bar=document.querySelector(sel);
   if(bar){var si=d2i(t[sk]),ei=Math.min(d2i(t[ek]),N-1);bar.style.left=(si*CW)+'px';bar.style.width=((ei-si+1)*CW)+'px';}
 }
-function oMU(){if(drag){drag=null;rChart();}document.removeEventListener('mousemove',oMM);document.removeEventListener('mouseup',oMU);}
-function tI(id,e){e.preventDefault();var t=S.tasks.find(function(x){return x.id===id;});toast(t.name+': '+dsp(t.sd)+' ~ '+dsp(t.ed));}
+function syncPeriod(){
+  var minSd=S.sd, maxEd=S.ed;
+  S.tasks.forEach(function(t){
+    if(!t.on)return;
+    if(t.sd&&t.sd<minSd)minSd=t.sd;
+    if(t.ed&&t.ed>maxEd)maxEd=t.ed;
+    if(t.split&&t.ed2&&t.ed2>maxEd)maxEd=t.ed2;
+  });
+  S.sd=minSd;
+  S.ed=maxEd;
+}
+function oMU(){if(drag){drag=null;syncPeriod();rChart();sync();}document.removeEventListener('mousemove',oMM);document.removeEventListener('mouseup',oMU);}
+function chartTaskClick(id){
+  if(IS_RO)return;
+  var t=S.tasks.find(function(x){return x.id===id;});
+  if(!t)return;
+  var total=dif(S.sd,S.ed);
+
+  function autoDate(){
+    if(t.sd&&t.ed)return; /* 이전 날짜 유지 */
+    if(id===2){t.sd=S.sd;t.ed=addD(S.sd,Math.max(2,Math.round(total*0.15)));}
+    else if(id===3){t.sd=addD(S.sd,Math.round(total*0.75));t.ed=addD(S.sd,Math.min(total,Math.round(total*0.95)));}
+    else{var mid=Math.round(total*0.4);t.sd=addD(S.sd,mid);t.ed=addD(S.sd,Math.min(total,mid+13));}
+  }
+  function autoDate2(){
+    if(t.sd2&&t.ed2)return; /* 이전 2차 날짜 유지 */
+    t.sd2=addD(t.ed,3);
+    t.ed2=addD(t.sd2,Math.max(3,dif(t.sd,t.ed)));
+    if(id===5&&!t.desc2)t.desc2='조명 등';
+    if(id===10&&!t.desc2)t.desc2='A/C';
+  }
+
+  if(!t.canSplit){
+    /* 분할없는 공종: 비활성↔활성 토글 */
+    t.on=!t.on;
+    if(t.on)autoDate();
+  } else {
+    /* 분할가능 공종 4단계 순환:
+       off → 1차on → 1차+2차on → 1차on(2차off) → off → ... */
+    if(!t.on){
+      /* off → 1차 활성화 */
+      t.on=true; t.split=false; t._s2off=false;
+      autoDate();
+    } else if(!t.split && !t._s2off){
+      /* 1차only (2차 비활성화한 적 없음) → 2차 활성화 */
+      t.split=true; t._s2off=false;
+      autoDate2();
+    } else if(t.split){
+      /* 1차+2차 → 2차 비활성화 */
+      t.split=false; t._s2off=true;
+    } else {
+      /* 1차only (2차 비활성화 후) → 전체 off */
+      t.on=false; t._s2off=false;
+    }
+  }
+  sync();rEdit();rChart();
+}
+function tI(id,e,m,is2){
+  if(IS_RO)return;
+  e.preventDefault();e.stopPropagation();
+  var t=S.tasks.find(function(x){return x.id===id;});
+  var touch=e.touches[0];
+  drag={id:id,m:m||'mv',sx:touch.clientX,osd:is2?t.sd2:t.sd,oed:is2?t.ed2:t.ed,is2:!!is2};
+  document.addEventListener('touchmove',oTM,{passive:false});
+  document.addEventListener('touchend',oTU);
+}
+function oTM(e){
+  if(!drag)return;
+  e.preventDefault();
+  var touch=e.touches[0];
+  var dx=touch.clientX-drag.sx,dd=Math.round(dx/CW);
+  var t=S.tasks.find(function(x){return x.id===drag.id;}),N=tot();
+  var os=d2i(drag.osd),oe=d2i(drag.oed);
+  var sk=drag.is2?'sd2':'sd',ek=drag.is2?'ed2':'ed';
+  if(drag.m==='mv'){var ns=cl(os+dd,0,N-1);t[sk]=addD(S.sd,ns);t[ek]=addD(S.sd,cl(ns+(oe-os),0,N-1));}
+  else if(drag.m==='l'){t[sk]=addD(S.sd,cl(os+dd,0,oe));}
+  else{t[ek]=addD(S.sd,cl(oe+dd,os,N-1));}
+  var sel=drag.is2?'.bar[data-id2="'+drag.id+'"]':'.bar[data-id="'+drag.id+'"]';
+  var bar=document.querySelector(sel);
+  if(bar){var si=d2i(t[sk]),ei=Math.min(d2i(t[ek]),N-1);bar.style.left=(si*CW)+'px';bar.style.width=((ei-si+1)*CW)+'px';}
+}
+function oTU(){
+  if(drag){drag=null;syncPeriod();rChart();sync();}
+  document.removeEventListener('touchmove',oTM);
+  document.removeEventListener('touchend',oTU);
+}
 
 /* PDF */
 async function doPDF(){
@@ -865,6 +1020,7 @@ async function doPDF(){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
   pg.classList.add('on');document.getElementById('tc2').classList.add('on');rChart();
   var ca=document.getElementById('ca');ca.style.visibility='hidden';
+  document.querySelectorAll('.no-print').forEach(function(el){el.style.display='none';});
   document.getElementById('pov').style.display='flex';
   var sels=document.querySelectorAll('.sc');
   sels.forEach(function(el){el.dataset.op=el.style.position;el.style.position='static';});
@@ -894,7 +1050,7 @@ async function doPDF(){
     var fn=today().replace(/-/g,'').substring(2)+' '+(S.pn||'현장명')+' 일정표';pdf.save(fn+'.pdf');
     toast('PDF 저장 완료!');
   }catch(err){console.error(err);toast('PDF 오류 — 브라우저 인쇄(Ctrl+P)로 저장해주세요.');}
-  finally{sels.forEach(function(el){el.style.position=el.dataset.op||'';});ca.style.visibility='';document.getElementById('pov').style.display='none';}
+  finally{sels.forEach(function(el){el.style.position=el.dataset.op||'';});ca.style.visibility='';document.getElementById('pov').style.display='none';document.querySelectorAll('.no-print').forEach(function(el){el.style.display='';});}
 }
 
 /* SHARE */
