@@ -1138,26 +1138,38 @@ function oTU(){
 
 async function doIMG(){
   if(typeof html2canvas==='undefined'){toast('캡처 라이브러리 로딩 중...');return;}
-  var ca=document.getElementById('ca');ca.style.visibility='hidden';
-  document.querySelectorAll('.no-print').forEach(function(el){el.style.display='none';});
-  document.getElementById('pov').style.display='flex';
+  /* no-print 숨기기 */
+  var noprints=document.querySelectorAll('.no-print');
+  noprints.forEach(function(el){el.style.visibility='hidden';});
+  /* 오버플로우 컨테이너 확장 */
+  var cs=document.querySelector('.cs');
+  var cw=document.querySelector('.cw');
+  var csOvf=cs?cs.style.overflow:'';
+  var csW=cs?cs.style.width:'';
+  var cwOvf=cw?cw.style.overflow:'';
+  if(cs){cs.style.overflow='visible';cs.style.width='max-content';}
+  if(cw){cw.style.overflow='visible';}
+  /* sticky 해제 */
   var sels=document.querySelectorAll('.sc');
-  sels.forEach(function(el){el.dataset.op=el.style.position;el.style.position='static';});
-  await new Promise(function(r){setTimeout(r,100);});
+  var selPos=[];
+  sels.forEach(function(el){selPos.push(el.style.position);el.style.position='static';});
+  await new Promise(function(r){setTimeout(r,150);});
   try{
-    var gt=document.getElementById('gtw');
-    var canvas=await html2canvas(gt,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    var tbl=document.getElementById('gt');
+    var canvas=await html2canvas(tbl,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false});
     var a=document.createElement('a');
     a.download=(S.pn||'일정표')+'_일정표.png';
     a.href=canvas.toDataURL('image/png');
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     toast('이미지 저장 완료!');
-  }catch(e){toast('이미지 저장 실패');}
+  }catch(e){console.error(e);toast('이미지 저장 실패: '+e.message);}
   finally{
-    sels.forEach(function(el){el.style.position=el.dataset.op||'';});
-    ca.style.visibility='';
-    document.getElementById('pov').style.display='none';
-    document.querySelectorAll('.no-print').forEach(function(el){el.style.display='';});
+    if(cs){cs.style.overflow=csOvf;cs.style.width=csW;}
+    if(cw){cw.style.overflow=cwOvf;}
+    sels.forEach(function(el,i){el.style.position=selPos[i]||'';});
+    noprints.forEach(function(el){el.style.visibility='';});
   }
 }
 async function doPDF(){
