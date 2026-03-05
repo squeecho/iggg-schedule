@@ -118,7 +118,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .cp{padding:12px 12px 30px;}
 .ca{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .cw{background:var(--sf);border-radius:0;border:2px solid #b8b2a8;overflow:hidden;}
-.cs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.cs{overflow-x:auto;}
 .gt{border-collapse:collapse;table-layout:fixed;}
 .gt th,.gt td{border-right:1px solid rgba(0,0,0,.06);border-bottom:1px solid var(--bd);}
 .gt tbody tr:last-child td{border-bottom:none;}
@@ -149,7 +149,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .bar.bar-grn{background:var(--gn);}
 .bar:hover{filter:brightness(1.1);}
 .bar:active{cursor:grabbing;}
-.bh{position:absolute;top:0;bottom:0;width:8px;background:transparent;cursor:ew-resize;z-index:4;}
+.bh{position:absolute;top:0;bottom:0;width:8px;background:transparent;cursor:ew-resize;z-index:4;touch-action:none;}
 .bh.l{left:0;}
 .bh.r{right:0;}
 .bt{font-size:10px;color:#111;white-space:nowrap;padding:0 8px;pointer-events:none;overflow:visible;font-weight:700;position:relative;z-index:4;}
@@ -992,8 +992,8 @@ function nDragStart(e,nid){
   var n=S.notes.find(function(x){return x.id===nid;});
   if(!n)return;
   /* manual 타입으로 전환해서 dt 직접 저장 */
-  n._origType=n.type;n.type='manual';
-  if(!n.dt)n.dt=nDt(n)||S.sd;
+  var currentDt=nDt(n);n._origType=n.type;n.type='manual';
+  if(!n.dt)n.dt=currentDt||S.sd;
   nDrag={nid:nid,sx:e.clientX,odt:n.dt};
   document.addEventListener('mousemove',nDragMove);
   document.addEventListener('mouseup',nDragEnd);
@@ -1004,8 +1004,8 @@ function nDragStartT(e,nid){
   if(navigator.vibrate)navigator.vibrate(20);
   var n=S.notes.find(function(x){return x.id===nid;});
   if(!n)return;
-  n._origType=n.type;n.type='manual';
-  if(!n.dt)n.dt=nDt(n)||S.sd;
+  var currentDt=nDt(n);n._origType=n.type;n.type='manual';
+  if(!n.dt)n.dt=currentDt||S.sd;
   nDrag={nid:nid,sx:e.touches[0].clientX,odt:n.dt};
   document.addEventListener('touchmove',nDragMoveT,{passive:false});
   document.addEventListener('touchend',nDragEnd);
