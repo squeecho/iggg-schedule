@@ -238,6 +238,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 .tcal-day.sel-e{background:linear-gradient(to left,transparent 50%,var(--al) 50%);}
 .tcal-day.sel-s.sel-e{background:transparent;}
 .tcal-dn{display:inline-block;width:26px;height:26px;line-height:26px;border-radius:50%;}
+.tcal-day.oor .tcal-dn{opacity:.3;}
 .tcal-result{text-align:center;font-size:11px;font-weight:700;color:var(--bar);padding:6px;margin:4px 14px 0;background:#eef2fd;border-radius:8px;}
 .date-btn-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
 .date-disp{flex:1;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'DM Mono',monospace;color:var(--tx);min-width:0;cursor:pointer;transition:border-color .14s;}
@@ -379,12 +380,34 @@ function fD(d){if(!d||isNaN(d.getTime()))return '';return d.getFullYear()+'-'+zz
 function today(){return fD(new Date());}
 function addD(s,n){var d=pD(s);if(!d)return '';d.setDate(d.getDate()+n);return fD(d);}
 function dif(a,b){var da=pD(a),db=pD(b);if(!da||!db)return 0;return Math.round((db-da)/86400000);}
-function tot(){var t14=S.tasks&&S.tasks.find(function(x){return x.id===14;});var endDs=(t14&&t14.on&&t14.ed)?t14.ed:S.ed;if(!endDs)return 1;var n=dif(S.sd,endDs)+1;return(n<1?1:n)+2;}
+function tot(){
+  var endDs=S.ed||'';
+  /* 준공청소(id14) 우선 */
+  var t14=S.tasks&&S.tasks.find(function(x){return x.id===14;});
+  if(t14&&t14.on&&t14.ed)endDs=t14.ed;
+  /* 모든 공종 날짜 중 최대값 반영 */
+  if(S.tasks)S.tasks.forEach(function(t){
+    if(!t.on)return;
+    if(t.ed&&t.ed>endDs)endDs=t.ed;
+    if(t.split&&t.ed2&&t.ed2>endDs)endDs=t.ed2;
+  });
+  if(!endDs)return 1;
+  var n=dif(S.sd,endDs)+1;
+  return(n<1?1:n)+2;
+}
 function d2i(ds){return Math.max(0,dif(S.sd,ds));}
 function getDt(){var a=[],b=pD(S.sd),N=tot();for(var i=0;i<N;i++){var d=new Date(b.getTime());d.setDate(d.getDate()+i);a.push({d:d.getDate(),m:d.getMonth()+1,w:d.getDay(),ds:fD(d)});}return a;}
 function dsp(ds){if(!ds)return '—';var d=pD(ds);return (d.getMonth()+1)+'/'+d.getDate()+'('+WK[d.getDay()]+')';}
 function dspK(ds){if(!ds)return '미정';var d=pD(ds);return zz(d.getMonth()+1)+'월 '+zz(d.getDate())+'일 ('+WK[d.getDay()]+')';}
-function per(){return S.sd+' ~ '+S.ed+'  (총 '+tot()+'일)';}
+function per(){
+  var endDs=S.ed||'';
+  if(S.tasks)S.tasks.forEach(function(t){
+    if(!t.on)return;
+    if(t.ed&&t.ed>endDs)endDs=t.ed;
+    if(t.split&&t.ed2&&t.ed2>endDs)endDs=t.ed2;
+  });
+  return S.sd+' ~ '+(endDs||S.ed)+'  (총 '+tot()+'일)';
+}
 function zz(n){return String(n).padStart(2,'0');}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function cl(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -451,9 +474,10 @@ function saveProject(){
   arr.unshift({pn:nm,sd:S.sd,ed:S.ed,savedAt:today(),snap:JSON.stringify(S)});
   if(arr.length>8)arr=arr.slice(0,8);
   setRecent(arr);
-  /* 저장 후 해당 프로젝트를 바로 유지 표시 */
+  /* 저장 후 초기화 - 새 현장 입력 대기 */
+  S=defaultState();_open=null;
   var fnEl=document.getElementById('fn');
-  if(fnEl){fnEl.blur();fnEl.value=nm;}
+  if(fnEl){fnEl.blur();fnEl.value='';}
   calInit();sync();rEdit();rChips();rChart();
   toast(nm+' 저장됐어요!');
 }
@@ -517,8 +541,24 @@ function sync(){
   var fe=document.getElementById('fend');if(fe)fe.value=S.ed||'';
   upBadge();
   if(typeof calRender==='function')calRender();
+  autoSave();
 }
-function upBadge(){if(typeof calRender==='function')calRender();}
+var _asTimer=null;
+function autoSave(){
+  if(!S.pn||!S.pn.trim())return;
+  clearTimeout(_asTimer);
+  _asTimer=setTimeout(function(){
+    var nm=S.pn.trim();
+    var arr=getRecent().filter(function(x){return x.pn!==nm;});
+    arr.unshift({pn:nm,sd:S.sd,ed:S.ed,savedAt:today(),snap:JSON.stringify(S)});
+    if(arr.length>8)arr=arr.slice(0,8);
+    setRecent(arr);
+    rChips();
+  },800);
+}
+function upBadge(){
+  if(typeof calRender==='function')calRender();
+}
 /* calendar */
 var _cY=0,_cM=0,_cPhase=0;
 function calInit(){
@@ -572,7 +612,7 @@ function calRender(){
   renderMonth(ny,nm,'calGrid2','calTitle2');
 
   var dur=document.getElementById('calDur');
-  if(S.sd&&S.ed&&dur){dur.style.display='';dur.textContent=S.sd+' ~ '+S.ed+'  (총 '+tot()+'일)';}
+  if(S.sd&&S.ed&&dur){dur.style.display='';dur.textContent=S.sd+' ~ '+S.ed+'  (총 '+(dif(S.sd,S.ed)+1)+'일)';}
   else if(dur)dur.style.display='none';
 }
 function calClick(el){
@@ -587,7 +627,10 @@ function calClick(el){
   } else {
     if(ds<=S.sd){var tmp=S.sd;S.sd=ds;ds=tmp;}
     S.ed=ds;_cPhase=0;
-    calRender();upBadge();rEdit();
+    /* 달력 마지막날 = 준공청소 날짜로 자동 설정 */
+    var t14=S.tasks&&S.tasks.find(function(x){return x.id===14;});
+    if(t14){t14.on=true;t14.sd=ds;t14.ed=ds;}
+    calRender();upBadge();rEdit();rChart();
   }
 }
 function shiftTasks(oldSd,newSd){
@@ -599,6 +642,32 @@ function shiftTasks(oldSd,newSd){
     if(t.ed2)t.ed2=addD(t.ed2,delta);
   });
   if(S.ed)S.ed=addD(S.ed,delta);
+}
+function scaleTasks(oldSd,oldEd,newSd,newEd){
+  /* 공종 날짜를 새 공사기간에 비율로 재배치 */
+  var oldLen=dif(oldSd,oldEd);
+  var newLen=dif(newSd,newEd);
+  if(oldLen<=0)return;
+  function scaleDs(ds){
+    if(!ds)return ds;
+    var offset=dif(oldSd,ds);
+    var ratio=offset/oldLen;
+    var newOffset=Math.round(ratio*newLen);
+    /* 범위 내로 clamp */
+    newOffset=Math.max(0,Math.min(newLen,newOffset));
+    return addD(newSd,newOffset);
+  }
+  S.tasks.forEach(function(t){
+    if(!t.sd)return;
+    var dur=dif(t.sd,t.ed)||0;
+    t.sd=scaleDs(t.sd);
+    t.ed=addD(t.sd,dur);
+    if(t.split&&t.sd2){
+      var dur2=dif(t.sd2,t.ed2)||0;
+      t.sd2=scaleDs(t.sd2);
+      t.ed2=addD(t.sd2,dur2);
+    }
+  });
 }
 function onDC(){
   var ns=document.getElementById('fs').value,ne=document.getElementById('fend').value;
@@ -742,14 +811,14 @@ function rG(){
     var hasSplit=t.on&&t.canSplit&&t.split&&t.sd2&&t.ed2;
     if(t.on&&ei>=si&&si<N){
       var lx=si*CW,wx=(ei-si+1)*CW;
-      var topStyle=hasSplit?'top:30%;':'top:50%;';
+      var topStyle=hasSplit?'top:26%;':'top:50%;';
       h+='<div class="bar" data-id="'+t.id+'" style="left:'+lx+'px;width:'+wx+'px;position:absolute;'+topStyle+'transform:translateY(-50%);z-index:2;background:'+barColor+'" onmousedown="dS(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">'+(hasSplit?'[1차] ':'')+esc(t.name)+(t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
     }
     if(hasSplit){
       var si2=d2i(t.sd2),ei2=Math.min(d2i(t.ed2),N-1);
       if(ei2>=si2&&si2<N){
         var lx2=si2*CW,wx2=(ei2-si2+1)*CW;
-        h+='<div class="bar" data-id2="'+t.id+'" style="left:'+lx2+'px;width:'+wx2+'px;position:absolute;top:70%;transform:translateY(-50%);z-index:2;background:'+barColor+';opacity:.8" onmousedown="dS2(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS2(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">[2차] '+esc(t.name)+(t.desc2?' | '+esc(t.desc2):t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS2(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
+        h+='<div class="bar" data-id2="'+t.id+'" style="left:'+lx2+'px;width:'+wx2+'px;position:absolute;top:74%;transform:translateY(-50%);z-index:2;background:'+barColor+';opacity:.8" onmousedown="dS2(event,'+t.id+',\'mv\')" ontouchstart="tI('+t.id+',event)"><div class="bh l" onmousedown="dS2(event,'+t.id+',\'l\');event.stopPropagation()"></div><span class="bt">[2차] '+esc(t.name)+(t.desc2?' | '+esc(t.desc2):t.desc?' | '+esc(t.desc):'')+'</span><div class="bh r" onmousedown="dS2(event,'+t.id+',\'r\');event.stopPropagation()"></div></div>';
       }
     }
     h+='</td></tr>';
@@ -887,6 +956,7 @@ function tcalRender(){
       var cls='tcal-day';
       if(dw===0)cls+=' sun';else if(dw===6)cls+=' sat';
       if(isH(ds))cls+=' hol';
+      if(S.sd&&S.ed&&(ds<S.sd||ds>S.ed))cls+=' oor';
       if(_tc.sd&&_tc.ed){
         if(ds===_tc.sd&&ds===_tc.ed)cls+=' sel-s sel-e';
         else if(ds===_tc.sd)cls+=' sel-s in-range';
