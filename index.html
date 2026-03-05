@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{--bg:#f2f0eb;--sf:#fff;--bd:#e0dbd2;--bmd:#ccc7bc;--tx:#18170f;--mu:#7a7870;--mu2:#b5b0a8;
 --bar:#cbd5e1;--barh:#94a3b8;--al:#eef2fd;
@@ -284,6 +285,7 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
     <span class="tb-site" id="tpn">(현장명 미입력)</span>
   </div>
   <button class="btn bp" id="bpdf">PDF</button>
+  <button class="btn bp" id="bimg" style="background:#6b7280" onclick="doIMG()">IMG</button>
   
 </div>
 <div class="tabs" id="tabs">
@@ -342,14 +344,14 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
   </div>
   <div class="cta">
     <button class="btn bo" onclick="sw('c')">차트 보기</button>
-    <button class="btn bp" onclick="doPDF()">PDF 저장</button>
+    <button class="btn bp" onclick="doPDF()">PDF 저장</button><button class="btn bp" style="background:#6b7280;margin-left:4px" onclick="doIMG()">이미지 저장</button>
   </div>
 </div>
 <!-- 차트 -->
 <div class="pg cp" id="pc">
   <div class="ca" id="ca">
     <button class="btn bg2" onclick="sw('e')">← 편집</button>
-    <button class="btn bp" onclick="doPDF()">PDF 저장</button>
+    <button class="btn bp" onclick="doPDF()">PDF 저장</button><button class="btn bp" style="background:#6b7280;margin-left:4px" onclick="doIMG()">이미지 저장</button>
     
   </div>
   <div id="pa">
@@ -622,11 +624,10 @@ function calRender(){
 function autoTaskDates(){
   var total=dif(S.sd,S.ed);
   if(total<=0)return;
-  /* PDF 기준 28일 공사 비율로 계산, 일요일 포함 연속 배치 */
-  function s(ratio){return Math.round(total*ratio);}
-  function e(ratio){return Math.min(total,Math.round(total*ratio));}
+  function s(r){return Math.round(total*r);}
+  function e(r){return Math.min(total,Math.round(total*r));}
 
-  /* 가설(1): 0~17% = 초기 5일 */
+  /* 가설(1): 초기 3일 */
   var t1=S.tasks.find(function(x){return x.id===1;});
   if(t1){t1.sd=S.sd;t1.ed=addD(S.sd,2);}
 
@@ -638,56 +639,77 @@ function autoTaskDates(){
   var t4=S.tasks.find(function(x){return x.id===4;});
   if(t4){t4.sd=addD(S.sd,s(0.07));t4.ed=addD(S.sd,e(0.25));}
 
-  /* 전기(5) 1차: 7%~25% */
+  /* 전기(5) 1차: 목공사와 동일 */
   var t5=S.tasks.find(function(x){return x.id===5;});
-  if(t5){t5.sd=addD(S.sd,s(0.07));t5.ed=addD(S.sd,e(0.25));}
+  if(t5&&t4){t5.sd=t4.sd;t5.ed=t4.ed;}
+  else if(t5){t5.sd=addD(S.sd,s(0.07));t5.ed=addD(S.sd,e(0.25));}
 
   /* 도장(6): 46%~60% */
   var t6=S.tasks.find(function(x){return x.id===6;});
   if(t6){t6.sd=addD(S.sd,s(0.46));t6.ed=addD(S.sd,e(0.60));}
 
-  /* 금속/타일(7): 32%~46% */
+  /* 금속(7): 32%~46% */
   var t7=S.tasks.find(function(x){return x.id===7;});
   if(t7){t7.sd=addD(S.sd,s(0.32));t7.ed=addD(S.sd,e(0.46));}
 
-  /* 설비/필름(8): 25%~46% */
+  /* 설비(8): 25%~46% */
   var t8=S.tasks.find(function(x){return x.id===8;});
   if(t8){t8.sd=addD(S.sd,s(0.25));t8.ed=addD(S.sd,e(0.46));}
 
-  /* 타일(9): 57%~75% - 도장 이후 */
-  var t9=S.tasks.find(function(x){return x.id===9;});
-  var t9Start=t6&&t6.ed?addD(t6.ed,0):addD(S.sd,s(0.57));
-  if(t9){t9.sd=t9Start;t9.ed=addD(t9Start,Math.max(3,e(0.18)));}
-
-  /* 공조(10) 1차: 28%~39% */
-  var t10=S.tasks.find(function(x){return x.id===10;});
-  if(t10){t10.sd=addD(S.sd,s(0.28));t10.ed=addD(S.sd,e(0.39));}
-
-  /* 바닥(11): 없으면 타일 이후 */
+  /* 필름(11): 도장과 같은 날짜 */
   var t11=S.tasks.find(function(x){return x.id===11;});
-  if(t11){t11.sd=addD(S.sd,s(0.57));t11.ed=addD(S.sd,e(0.75));}
+  if(t11&&t6){t11.sd=t6.sd;t11.ed=t6.ed;}
 
-  /* 가스(12): 85%~93% */
+  /* 공조(10) 1차: 28% 시작 3일 */
+  var t10=S.tasks.find(function(x){return x.id===10;});
+  if(t10){t10.sd=addD(S.sd,s(0.28));t10.ed=addD(t10.sd,2);}
+
+  /* 타일(9): 도장 다음날~ */
+  var t9=S.tasks.find(function(x){return x.id===9;});
+  var t9s=t6&&t6.ed?addD(t6.ed,1):addD(S.sd,s(0.57));
+  if(t9){
+    t9.sd=t9s;
+    t9.ed=addD(t9s,Math.max(3,e(0.18)));
+    if(t9.ed>=S.ed){t9.ed=addD(S.ed,-2);}
+    if(t9.sd>=t9.ed){t9.sd=addD(t9.ed,-3);}
+  }
+
+  /* 소방(3) 1차: 45~55% */
+  var t3=S.tasks.find(function(x){return x.id===3;});
+  if(t3){t3.sd=addD(S.sd,s(0.45));t3.ed=addD(S.sd,e(0.55));}
+
+  /* 가스(12): 타일마감+2일 다음날부터 2일 (주방입고 수동설정 시 그 다음날) */
   var t12=S.tasks.find(function(x){return x.id===12;});
-  if(t12){t12.sd=addD(S.sd,s(0.85));t12.ed=addD(S.sd,e(0.93));}
+  if(t12){
+    var n1=S.notes.find(function(x){return x.id===1;});
+    var kitBase=n1&&n1.dt?n1.dt:(t9&&t9.on&&t9.ed?addD(t9.ed,2):'');
+    t12.sd=kitBase?addD(kitBase,1):addD(S.sd,s(0.85));
+    t12.ed=addD(t12.sd,1);
+  }
 
-  /* 기타(13): 75%~99% */
+  /* 기타(13): 준공청소 이전 3일 */
   var t13=S.tasks.find(function(x){return x.id===13;});
   if(t13){t13.ed=addD(S.ed,-1);t13.sd=addD(S.ed,-3);}
 
-  /* 소방(3): 말기 85%~95% */
-  var t3=S.tasks.find(function(x){return x.id===3;});
-  if(t3){t3.sd=addD(S.sd,s(0.85));t3.ed=addD(S.sd,e(0.95));}
-
-  /* 2차 분할: 전기(5) 2차 = 78%~96% 항상 활성화, 공조(10) 2차 = 75%~89% */
+  /* ── 2차 분할 ── */
+  /* 전기(5) 2차: 준공 -4~-2일 (3일), 항상 활성 */
   if(t5){
     t5.split=true;
-    if(!t5.sd2||!t5.ed2){t5.sd2=addD(S.sd,s(0.78));t5.ed2=addD(S.sd,e(0.96));}
+    t5.sd2=addD(S.ed,-4);t5.ed2=addD(S.ed,-2);
     if(!t5.desc2)t5.desc2='조명 등';
   }
-  if(t10&&t10.split){
-    if(!t10.sd2||!t10.ed2){t10.sd2=addD(S.sd,s(0.75));t10.ed2=addD(S.sd,e(0.89));}
-  }
+  /* 도장(6) 2차: 준공 -5~-3일 */
+  if(t6&&t6.split){t6.sd2=addD(S.ed,-5);t6.ed2=addD(S.ed,-3);}
+  /* 금속(7) 2차: 준공 -6~-4일 */
+  if(t7&&t7.split){t7.sd2=addD(S.ed,-6);t7.ed2=addD(S.ed,-4);}
+  /* 설비(8) 2차: 준공 -5~-3일 */
+  if(t8&&t8.split){t8.sd2=addD(S.ed,-5);t8.ed2=addD(S.ed,-3);}
+  /* 타일(9) 2차: 준공 -2~-1일 (2일) */
+  if(t9&&t9.split){t9.sd2=addD(S.ed,-2);t9.ed2=addD(S.ed,-1);}
+  /* 공조(10) 2차: 준공 -4~-2일 */
+  if(t10&&t10.split){t10.sd2=addD(S.ed,-4);t10.ed2=addD(S.ed,-2);}
+  /* 소방(3) 2차: 준공 -2~-1일 */
+  if(t3&&t3.split){t3.sd2=addD(S.ed,-2);t3.ed2=addD(S.ed,-1);}
 
   /* 준공청소(14): 마지막날 고정 */
   var t14=S.tasks.find(function(x){return x.id===14;});
@@ -826,15 +848,28 @@ function rNE(){
       h+='<br><small style="font-size:10px;color:var(--mu)">'+autoDesc+' 자동</small>';
     } else if(n.type==='auto_mk'||n.type==='auto_sb'){
       var autoNd=nDt(n);
-      h+='<div class="date-disp" style="font-size:12px;cursor:pointer" onclick="openNCal('+n.id+')">'+( autoNd?dspK(autoNd):'📅 날짜 선택')+'</div>';
-      if(!n.dt)h+='<small style="font-size:10px;color:var(--bar);display:block;margin-top:2px">'+autoDesc+' 연동 (탭하여 수정)</small>';
-      else h+='<small style="font-size:10px;color:var(--mu);display:block;margin-top:2px">수동 설정됨</small>';
+      var autoLogic=n.type==='auto_mk'?'목공사 종료+1일':'설비공사 종료+2일';
+      if(!n.dt){
+        h+='<span style="font-size:12px;color:var(--gn);font-weight:700;font-family:DM Mono,monospace">'+(autoNd?dspK(autoNd):'미정')+'</span>';
+        h+='<br><small style="font-size:10px;color:var(--mu)">'+autoLogic+' 자동</small>';
+        h+='<br><small style="font-size:9px;color:#9ca3af">차트에서 drag로 수정가능</small>';
+      } else {
+        h+='<div class="date-disp" style="font-size:12px;cursor:pointer" onclick="openNCal('+n.id+')">'+dspK(n.dt)+'</div>';
+        h+='<small style="font-size:10px;color:var(--mu);display:block;margin-top:2px">수동 설정됨</small>';
+        h+='<small style="font-size:9px;color:#9ca3af;display:block">차트에서 drag로 수정가능</small>';
+      }
     } else if(n.id===1){
-      var t13=S.tasks.find(function(x){return x.id===13;});
-      var av=(t13&&t13.on&&t13.sd)?t13.sd:'';
-      var cv=n.dt||av;
-      h+='<div class="date-disp" style="font-size:12px;cursor:pointer" onclick="openNCal('+n.id+')">'+( cv?dspK(cv):'📅 날짜 선택')+'</div>';
-      h+='<small style="font-size:10px;color:var(--bar);display:block;margin-top:2px">'+(n.dt?'수동 설정됨':'기타공사 시작일 연동 (탭하여 수정)')+'</small>';
+      var t9chk=S.tasks.find(function(x){return x.id===9;});
+      var autoNd1=(t9chk&&t9chk.on&&t9chk.ed)?addD(t9chk.ed,2):'';
+      if(!n.dt){
+        h+='<span style="font-size:12px;color:var(--gn);font-weight:700;font-family:DM Mono,monospace">'+(autoNd1?dspK(autoNd1):'미정')+'</span>';
+        h+='<br><small style="font-size:10px;color:var(--mu)">타일공사 종료+2일 자동</small>';
+        h+='<br><small style="font-size:9px;color:#9ca3af">차트에서 drag로 수정가능</small>';
+      } else {
+        h+='<div class="date-disp" style="font-size:12px;cursor:pointer" onclick="openNCal('+n.id+')">'+dspK(n.dt)+'</div>';
+        h+='<small style="font-size:10px;color:var(--mu);display:block;margin-top:2px">수동 설정됨</small>';
+        h+='<small style="font-size:9px;color:#9ca3af;display:block">차트에서 drag로 수정가능</small>';
+      }
     } else {
       h+='<div class="date-disp" style="font-size:12px;cursor:pointer" onclick="openNCal('+n.id+')">'+( n.dt?dspK(n.dt):'📅 날짜 선택')+'</div>';
     }
@@ -1026,6 +1061,10 @@ function chartTaskClick(id){
   }
   function autoDate2(){
     if(t.sd2&&t.ed2)return; /* 이전 2차 날짜 유지 */
+    /* 준공청소 기준 고정 공종 */
+    var edBase=S.ed;
+    if(id===3){t.sd2=addD(edBase,-2);t.ed2=addD(edBase,-1);return;}
+    if(id===9){t.sd2=addD(edBase,-2);t.ed2=addD(edBase,-1);return;}
     t.sd2=addD(t.ed,3);
     t.ed2=addD(t.sd2,Math.max(3,dif(t.sd,t.ed)));
     if(id===5&&!t.desc2)t.desc2='조명 등';
@@ -1096,6 +1135,31 @@ function oTU(){
 }
 
 /* PDF */
+
+async function doIMG(){
+  if(typeof html2canvas==='undefined'){toast('캡처 라이브러리 로딩 중...');return;}
+  var ca=document.getElementById('ca');ca.style.visibility='hidden';
+  document.querySelectorAll('.no-print').forEach(function(el){el.style.display='none';});
+  document.getElementById('pov').style.display='flex';
+  var sels=document.querySelectorAll('.sc');
+  sels.forEach(function(el){el.dataset.op=el.style.position;el.style.position='static';});
+  await new Promise(function(r){setTimeout(r,100);});
+  try{
+    var gt=document.getElementById('gtw');
+    var canvas=await html2canvas(gt,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    var a=document.createElement('a');
+    a.download=(S.pn||'일정표')+'_일정표.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    toast('이미지 저장 완료!');
+  }catch(e){toast('이미지 저장 실패');}
+  finally{
+    sels.forEach(function(el){el.style.position=el.dataset.op||'';});
+    ca.style.visibility='';
+    document.getElementById('pov').style.display='none';
+    document.querySelectorAll('.no-print').forEach(function(el){el.style.display='';});
+  }
+}
 async function doPDF(){
   var pg=document.getElementById('pc');
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
@@ -1141,7 +1205,7 @@ async function doPDF(){
 
 
 /* READONLY */
-function eRO(){IS_RO=true;var b=document.createElement('div');b.className='rob';b.textContent='읽기 전용 · 수정 불가';document.getElementById('tabs').insertAdjacentElement('beforebegin',b);document.getElementById('tabs').style.display='none';document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});document.getElementById('pc').classList.add('on');document.getElementById('ca').innerHTML='<button class="btn bp" onclick="doPDF()">PDF 저장</button><span style="font-size:12px;color:var(--mu);margin-left:6px"></span>';rChart();}
+function eRO(){IS_RO=true;var b=document.createElement('div');b.className='rob';b.textContent='읽기 전용 · 수정 불가';document.getElementById('tabs').insertAdjacentElement('beforebegin',b);document.getElementById('tabs').style.display='none';document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});document.getElementById('pc').classList.add('on');document.getElementById('ca').innerHTML='<button class="btn bp" onclick="doPDF()">PDF 저장</button><button class="btn bp" style="background:#6b7280;margin-left:4px" onclick="doIMG()">이미지 저장</button><span style="font-size:12px;color:var(--mu);margin-left:6px"></span>';rChart();}
 
 /* LOAD HASH */
 function loadH(){var m=location.hash.match(/[#&]d=([^&]+)/);if(!m)return;try{var dec=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(dec&&dec.tasks){var ro=dec._ro;delete dec._ro;S=dec;if(ro)eRO();}}catch(e){}}
@@ -1165,6 +1229,7 @@ var _tt=null;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('on');},3000);}
 
 document.getElementById('bpdf').onclick=doPDF;
+  document.getElementById('bimg').onclick=doIMG;
 loadH();calInit();sync();rEdit();rChips();
 
 var _tc={id:null,sd:'',ed:'',phase:0,y:0,m:0,is2:false};
