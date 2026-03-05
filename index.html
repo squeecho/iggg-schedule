@@ -914,7 +914,7 @@ function rG(){
     var si=d2i(t.sd),ei=Math.min(d2i(t.ed),N-1);
     var isCl=(t.id===14);
     var barColor=isCl?'var(--gn)':'var(--bar)';
-    h+='<tr class="'+(t.on?'':'ia')+'"><td class="d1 sc s1" style="left:0;background:#faf9f7">'+zz(i+1)+'</td><td class="d2 sc s2" style="left:32px;background:#faf9f7;border-right:2px solid var(--bmd);cursor:pointer" onclick="chartTaskClick('+t.id+')">'+esc(t.name)+(t.canSplit&&t.on&&t.split?'<span class="no-print" style="font-size:9px;color:var(--bar);margin-left:4px">[2차▼]</span>':'')+'</td>';
+    h+='<tr class="'+(t.on?'':'ia')+'"><td class="d1 sc s1" style="left:0;background:#faf9f7">'+zz(i+1)+'</td><td class="d2 sc s2" style="left:32px;background:#faf9f7;border-right:2px solid var(--bmd);cursor:pointer;text-align:center" onclick="chartTaskClick('+t.id+')">'+esc(t.name)+'</td>';
     var fc=isH(ds[0]&&ds[0].ds)?'hol':(ds[0]&&ds[0].w===0?'sun':ds[0]&&ds[0].w===6?'sat':'');
     h+='<td class="dg '+fc+'" colspan="'+N+'" style="overflow:visible;position:relative">';
     ds.forEach(function(d,di){var h2=isH(d.ds),bg=h2?'var(--hc)':d.w===0?'var(--sc)':d.w===6?'var(--ac)':'';if(bg)h+='<div style="position:absolute;top:0;bottom:0;left:'+(di*CW)+'px;width:'+CW+'px;background:'+bg+';pointer-events:none;z-index:0"></div>';
